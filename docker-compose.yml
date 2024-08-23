@@ -1,0 +1,7 @@
+services:
+  fooder-php:
+    name: fooder-php
+    build:
+      dockerfile: .
+    ports:
+      - "8080:8080"
