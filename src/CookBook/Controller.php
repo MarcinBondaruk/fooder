@@ -1,11 +1,11 @@
 <?php
-namespace Controller;
+namespace CookBook;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-final class Recipe {
-    public function getRecipes(Request $request): Response {
+final class Controller {
+    public function getRecipesPreview(Request $request): Response {
         $recipes = [
             [
                 'id' => 1,
