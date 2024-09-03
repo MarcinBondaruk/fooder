@@ -3,3 +3,4 @@
 /cache
 
 /.phpunit.cache
+/.phpunit.result.cache

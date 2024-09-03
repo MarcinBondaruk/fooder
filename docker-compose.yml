@@ -1,7 +1,16 @@
 services:
-  fooder-php:
-    name: fooder-php
-    build:
-      dockerfile: .
+  app:
+    container_name: fooder-app
+    image: php:8.3-fpm-bullseye
+    depends_on:
+      - origin
+    volumes:
+
+
+  origin:
+    container_name: fooder-origin
+    image: nginx:stable-alpine
     ports:
-      - "8080:8080"
+      - "8080:80"
+    environment:
+      - NGINX_PORT=80
