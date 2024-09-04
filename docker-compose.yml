@@ -1,8 +1,8 @@
 services:
-  app:
-    container_name: fooder-app
+  api:
+    container_name: fooder-api
     build:
-      context: ./app
+      context: ./api
 
   origin:
     container_name: fooder-origin
