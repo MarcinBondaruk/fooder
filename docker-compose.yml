@@ -1,16 +1,17 @@
 services:
   app:
     container_name: fooder-app
-    image: php:8.3-fpm-bullseye
-    depends_on:
-      - origin
-    volumes:
-
+    build:
+      context: ./app
 
   origin:
     container_name: fooder-origin
-    image: nginx:stable-alpine
+    build:
+      context: ./nginx
+    depends_on:
+      - app
     ports:
       - "8080:80"
     environment:
       - NGINX_PORT=80
+      - NGINX_HOST=localhost

@@ -1,6 +1,6 @@
-/vendor/
-/var
-/cache
+/app/vendor/
+/app/var
+/app/cache
 
-/.phpunit.cache
-/.phpunit.result.cache
+/app/.phpunit.cache
+/app/.phpunit.result.cache
