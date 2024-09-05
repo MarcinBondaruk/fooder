@@ -7,14 +7,14 @@ $routes = new RouteCollection();
 $routes->add('recipes_get', new Route(
     path: '/api/v1/recipes',
     defaults: [
-        '_controller' => 'CookBook\Controller::getRecipesPreview',
+        '_controller' => ['cookbook.ctrl', 'getRecipes'],
     ],
     methods: ['GET'],
 ));
 $routes->add('grocery_list_create', new Route(
     path: '/api/v1/grocery-list',
     defaults: [
-        '_controller' => 'Groceries\Controller::createGroceryList',
+        '_controller' => ['groceries.ctrl', 'createGroceryList'],
     ],
     methods: ['POST'],
 ));

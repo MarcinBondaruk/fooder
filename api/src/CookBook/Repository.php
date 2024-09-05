@@ -1,21 +1,21 @@
 <?php
 namespace CookBook;
 
-use CookBook\Views\PreviewRecipe;
+use CookBook\Response\GetRecipesResponse;
 
 final class Repository
 {
     /**
-     * @return PreviewRecipe[]
+     * @return GetRecipesResponse[]
      */
-    public function getRecipesPreview(): array
+    public function getRecipes(): array
     {
         return [
-            new PreviewRecipe(
+            new GetRecipesResponse(
                 1,
                 'Eggs\'n\'baky'
             ),
-            new PreviewRecipe(
+            new GetRecipesResponse(
                 2,
                 'Spaghetti Pomodoro'
             ),

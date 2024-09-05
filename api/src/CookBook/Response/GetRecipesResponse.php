@@ -1,7 +1,7 @@
 <?php
-namespace CookBook\Views;
+namespace CookBook\Response;
 
-final class PreviewRecipe
+final class GetRecipesResponse
 {
     public function __construct(
         public int $id,

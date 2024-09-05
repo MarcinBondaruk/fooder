@@ -16,6 +16,7 @@ final class ErrorListener implements EventSubscriberInterface
 
             $event->setResponse(new Response('Page not found', 404));
         } else {
+            var_dump($event->getThrowable());
             $event->setResponse(new Response('Something went wrong...', 500));
         }
     }

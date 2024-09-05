@@ -5,21 +5,12 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 final class Controller {
-    public function getRecipesPreview(Request $request): Response {
-        $recipes = [
-            [
-                'id' => 1,
-                'title' => 'Eggs and Bacon',
-                'preparation' => 'Lorem Ipsum Dolor...',
-                'ingredients' => ['eggs', 'bacon', 'butter'],
-            ],
-            [
-                'id' => 2,
-                'title' => 'Spaghetti Pomodoro',
-                'preparation' => 'Lorem Ipsum Dolor...',
-                'ingredients' => ['tomato', 'saghetti pasta', 'olive oil'],
-            ],
-        ];
+    public function __construct(
+        private Service $recipeService,
+    ) {}
+
+    public function getRecipes(Request $request): Response {
+        $recipes = $this->recipeService->getRecipes();
 
         $response = new Response(json_encode($recipes));
         $response->setStatusCode(200);

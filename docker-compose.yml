@@ -9,7 +9,7 @@ services:
     build:
       context: ./nginx
     depends_on:
-      - app
+      - api
     ports:
       - "8080:80"
     environment:
