@@ -4,10 +4,17 @@ use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 
 $routes = new RouteCollection();
-$routes->add('recipes_get', new Route(
+$routes->add('cookbook_get_recipes', new Route(
     path: '/api/v1/recipes',
     defaults: [
         '_controller' => ['cookbook.ctrl', 'getRecipes'],
+    ],
+    methods: ['GET'],
+));
+$routes->add('cookbook_get_recipe', new Route(
+    path: '/api/v1/recipes/{id}',
+    defaults: [
+        '_controller' => ['cookbook.ctrl', 'getRecipeById'],
     ],
     methods: ['GET'],
 ));

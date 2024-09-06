@@ -2,6 +2,8 @@
 
 namespace CookBook;
 
+use CookBook\Response\GetRecipeResponse;
+
 final class Service
 {
     public function __construct(
@@ -16,5 +18,10 @@ final class Service
         $recipes = $this->repository->getRecipes();
 
         return $recipes;
+    }
+
+    public function getRecipeById(int $id): GetRecipeResponse
+    {
+        return $this->repository->getRecipe($id);
     }
 }
