@@ -8,6 +8,10 @@ final class Controller
 {
     public function createGroceryList(Request $request): Response
     {
-        return new Response('Here\'s your grocery list');
+        // wykonac serwis, zwrocic response
+        // $groceryList = $this->groceryService->newShoppingList();
+        $response = 'GroceryList';
+        $response = 'asdas'
+        return new Response($response);
     }
 }

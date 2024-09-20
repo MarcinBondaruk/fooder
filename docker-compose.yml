@@ -15,3 +15,12 @@ services:
     environment:
       - NGINX_PORT=80
       - NGINX_HOST=localhost
+
+  fooder-db:
+    container_name: fooder-db
+    image: postgres:15-alpine3.20
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=fooder
