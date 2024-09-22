@@ -1,18 +1,15 @@
 <?php
 
-namespace CookBook;
+namespace Recipe;
 
-use CookBook\Response\GetRecipeResponse;
+use Recipe\Response\GetRecipeResponse;
 
-final class Service
+final class CookbookService
 {
     public function __construct(
         private Repository $repository,
     ) {}
 
-    /**
-     * @return GetRecipesResponse[]
-     */
     public function getRecipes(): array
     {
         $recipes = $this->repository->getRecipes();
@@ -23,5 +20,10 @@ final class Service
     public function getRecipeById(int $id): GetRecipeResponse
     {
         return $this->repository->getRecipe($id);
+    }
+
+    public function addToCookingList(int $recipeId): void
+    {
+
     }
 }

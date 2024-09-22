@@ -1,8 +1,8 @@
 <?php
-namespace CookBook;
+namespace Recipe;
 
-use CookBook\Response\GetRecipeResponse;
-use CookBook\Response\GetRecipesResponse;
+use Recipe\Response\GetRecipeResponse;
+use Recipe\Response\GetRecipesResponse;
 
 // [
 //     "id" => 2,

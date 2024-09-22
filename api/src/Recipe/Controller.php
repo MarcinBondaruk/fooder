@@ -1,12 +1,12 @@
 <?php
-namespace CookBook;
+namespace Recipe;
 
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-final class Controller {
+final class Controller
+{
     public function __construct(
-        private Service $recipeService,
+        private CookbookService $recipeService,
     ) {}
 
     public function getRecipes(): Response {

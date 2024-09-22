@@ -1,11 +1,11 @@
 <?php
 
-use CookBook\Controller as CookbookController;
-use CookBook\Repository as CookbookRepository;
-use CookBook\Service as CookbookService;
+use Recipe\Controller as RecipeController;
+use Recipe\Repository as RecipeRepository;
+use Recipe\CookbookService;
 use Fooder\ErrorListener;
 use Fooder\Framework;
-use Groceries\Controller as GroceriesController;
+use Grocery\Controller as GroceriesController;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\EventDispatcher\EventDispatcher;
@@ -49,11 +49,11 @@ $container->register('framework', Framework::class)
 /**
  * setup by Service
  */
-$container->register('cookbook.repo', CookbookRepository::class);
-$container->register('cookbook.svc', CookbookService::class)
-    ->setArguments([new Reference('cookbook.repo')]);
-$container->register('cookbook.ctrl', CookbookController::class)
-    ->setArguments([new Reference('cookbook.svc')]);
+$container->register('recipe.repo', RecipeRepository::class);
+$container->register('recipe.svc', CookbookService::class)
+    ->setArguments([new Reference('recipe.repo')]);
+$container->register('recipe.ctrl', RecipeController::class)
+    ->setArguments([new Reference('recipe.svc')]);
 
 $container->register('groceries.ctrl', GroceriesController::class);
 

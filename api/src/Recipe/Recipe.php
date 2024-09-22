@@ -1,5 +1,5 @@
 <?php
-namespace CookBook;
+namespace Recipe;
 
 final class Recipe
 {
