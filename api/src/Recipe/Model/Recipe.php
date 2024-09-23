@@ -1,5 +1,5 @@
 <?php
-namespace Recipe;
+namespace Recipe\Model;
 
 final class Recipe
 {

@@ -1,18 +1,9 @@
 <?php
-namespace Recipe;
 
-use Recipe\Response\GetRecipeResponse;
-use Recipe\Response\GetRecipesResponse;
+namespace Recipe\Repository;
 
-// [
-//     "id" => 2,
-//     "title" => "",
-//     "thumbnail" => "",
-//     "preparation" => "",
-//     "ingredients" => [],
-//     "tags" => [],
-// ],
-
+use Recipe\Api\Response\GetRecipeResponse;
+use Recipe\Api\Response\GetRecipesResponse;
 
 const RECIPES = [
     [
@@ -115,8 +106,7 @@ const RECIPES = [
     ],
 ];
 
-
-final class Repository
+final class RecipeQueryRepository
 {
     /**
      * @return GetRecipesResponse[]

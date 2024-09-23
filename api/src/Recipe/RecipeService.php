@@ -2,28 +2,34 @@
 
 namespace Recipe;
 
-use Recipe\Response\GetRecipeResponse;
+use Recipe\Api\Response\GetRecipeResponse;
+use Recipe\Dto\RecipeDTO;
+use Recipe\Model\Recipe;
+use Recipe\Repository\RecipeQueryRepository;
+use Recipe\Repository\RecipeRepository;
 
 final class CookbookService
 {
     public function __construct(
-        private Repository $repository,
+        private RecipeRepository $recipeRepository,
+        private RecipeQueryRepository $recipeQueryRepository,
     ) {}
 
     public function getRecipes(): array
     {
-        $recipes = $this->repository->getRecipes();
+        $recipes = $this->recipeQueryRepository->getRecipes();
 
         return $recipes;
     }
 
     public function getRecipeById(int $id): GetRecipeResponse
     {
-        return $this->repository->getRecipe($id);
+        return $this->recipeQueryRepository->getRecipe($id);
     }
 
-    public function addToCookingList(int $recipeId): void
+    public function createRecipe(RecipeDTO $recipeDTO): void
     {
-
+        $recipe = new Recipe(1, 'title', 'prep', []);
+        $this->recipeRepository->add($recipe);
     }
 }
