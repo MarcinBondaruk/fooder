@@ -3,7 +3,7 @@
 use Recipe\Controller as RecipeController;
 use Recipe\Repository\RecipeRepository as RecipeRepository;
 use Recipe\CookbookService;
-use Fooder\ErrorListener;
+use Fooder\Listener\ErrorListener;
 use Fooder\Framework;
 use Grocery\Controller as GroceriesController;
 use Recipe\Repository\RecipeQueryRepository;

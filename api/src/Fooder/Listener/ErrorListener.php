@@ -1,5 +1,5 @@
 <?php
-namespace Fooder;
+namespace Fooder\Listener;
 
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Response;
