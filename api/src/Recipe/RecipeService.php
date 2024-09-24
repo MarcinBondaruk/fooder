@@ -29,7 +29,7 @@ final class CookbookService
 
     public function createRecipe(RecipeDTO $recipeDTO): void
     {
-        $recipe = new Recipe(1, 'title', 'prep', []);
+        $recipe = new Recipe(null, 'title', 'prep', []);
         $this->recipeRepository->add($recipe);
     }
 }
