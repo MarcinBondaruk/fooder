@@ -47,11 +47,22 @@ $container->register('framework', Framework::class)
         new Reference('argument_resolver'),
     ]);
 
+$container->register('pdo', PDO::class)
+    ->setArguments([
+        // TODO: get arguments from envs
+    ]);
+
 /**
  * setup by Service
  */
-$container->register('recipe.repo', RecipeRepository::class);
-$container->register('recipe.query_repo', RecipeQueryRepository::class);
+$container->register('recipe.repo', RecipeRepository::class)
+    ->setArguments([
+        new Reference('pdo'),
+    ]);
+$container->register('recipe.query_repo', RecipeQueryRepository::class)
+    ->setArguments([
+        new Reference('pdo'),
+    ]);
 $container->register('recipe.svc', CookbookService::class)
     ->setArguments([
         new Reference('recipe.repo'),

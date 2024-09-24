@@ -2,6 +2,7 @@
 
 namespace Recipe\Repository;
 
+use PDO;
 use Recipe\Api\Response\GetRecipeResponse;
 use Recipe\Api\Response\GetRecipesResponse;
 
@@ -108,6 +109,9 @@ const RECIPES = [
 
 final class RecipeQueryRepository
 {
+    public function __construct(
+        private readonly PDO $pdo,
+    ) {}
     /**
      * @return GetRecipesResponse[]
      */

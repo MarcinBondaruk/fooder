@@ -9,4 +9,14 @@ final class Recipe
         private string $preparation,
         private array $ingredients,
     ) {}
+
+    public function title(): string
+    {
+        return $this->title;
+    }
+
+    public function preparation(): string
+    {
+        return $this->preparation;
+    }
 }
