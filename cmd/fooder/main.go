@@ -27,6 +27,8 @@ func main() {
 
 	http.HandleFunc("GET /api/v1/recipes/{id}", api.ViewRecipeHandler(recipeSvc))
 
+	http.HandleFunc("GET /api/v1/recipes", api.ListRecipesHandler(recipeSvc))
+
 	http.HandleFunc("POST /api/v1/cooking-lists", api.CreateCookingListHandler(clSvc))
 
 	http.HandleFunc("PATCH /api/v1/cooking-lists/{id}", api.AddRecipeToCookingListHandler(clSvc))

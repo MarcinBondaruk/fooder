@@ -39,7 +39,7 @@ func (db *InMemoryRepository) FindRecipeById(id int) map[string]string {
 	return db.recipes[id]
 }
 
-func (db *InMemoryRepository) GetRecipes(ids []int) []map[string]string {
+func (db *InMemoryRepository) FindRecipesByIds(ids []int) []map[string]string {
 	db.lock.Lock()
 	defer db.lock.Unlock()
 

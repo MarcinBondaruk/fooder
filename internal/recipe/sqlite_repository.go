@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 )
 
@@ -71,22 +72,50 @@ func (r *SqliteRepository) FindRecipeById(id int) map[string]string {
 	}
 }
 
-func (r *SqliteRepository) GetRecipes(ids []int) []map[string]string {
+func (r *SqliteRepository) FindRecipesByIds(ids []int) []map[string]string {
 	if len(ids) == 0 {
 		return []map[string]string{}
 	}
 
-	placeholders := strings.Repeat("?,", len(ids))
-	placeholders = placeholders[:len(placeholders)-1]
-
-	query := fmt.Sprintf(`SELECT id, name, description, ingredients FROM recipes WHERE id IN (%s)`, placeholders)
-
-	args := make([]interface{}, len(ids))
+	stringIds := make([]string, len(ids))
 	for i, id := range ids {
-		args[i] = id
+		stringIds[i] = strconv.Itoa(id) // Convert each int to a string
 	}
 
-	rows, err := r.db.Query(query, args...)
+	query := fmt.Sprintf(`SELECT id, name, description, ingredients FROM recipes WHERE id IN (%s)`, strings.Join(stringIds, ","))
+
+	rows, err := r.db.Query(query)
+	if err != nil {
+		log.Fatalf("Failed to get recipes: %v", err)
+	}
+	defer rows.Close()
+
+	var recipes []map[string]string
+	for rows.Next() {
+		var recipeID int
+		var name, description, ingredients string
+		err := rows.Scan(&recipeID, &name, &description, &ingredients)
+		if err != nil {
+			log.Fatalf("Failed to scan row: %v", err)
+		}
+
+		recipes = append(recipes, map[string]string{
+			"id":          fmt.Sprintf("%d", recipeID),
+			"name":        name,
+			"description": description,
+			"ingredients": ingredients,
+		})
+	}
+
+	return recipes
+}
+
+// todo: add pagination
+// todo: return errors
+func (r *SqliteRepository) FindAllRecipes() []map[string]string {
+	query := `SELECT id, name, description, ingredients FROM recipes`
+
+	rows, err := r.db.Query(query)
 	if err != nil {
 		log.Fatalf("Failed to get recipes: %v", err)
 	}

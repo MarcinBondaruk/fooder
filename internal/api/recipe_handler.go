@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/MarcinBondaruk/fooder/internal/recipe"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -45,5 +46,34 @@ func ViewRecipeHandler(recipeSvc *recipe.Service) http.HandlerFunc {
 			Description: rcp["description"],
 			Ingredients: strings.Split(rcp["ingredients"], ","),
 		})
+	}
+}
+
+func ListRecipesHandler(recipeSvc *recipe.Service) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		rcps := recipeSvc.FindAllRecipes()
+		//if err != nil {
+		//	http.Error(w, "Error during retrieval", http.StatusInternalServerError)
+		//	return
+		//}
+
+		w.Header().Set("Content-Type", "application/json")
+
+		responseRecipes := make([]RecipeResponse, len(rcps))
+
+		for i, rcp := range rcps {
+			id, err := strconv.Atoi(rcp["id"])
+			if err != nil {
+				log.Println(err)
+			}
+			
+			responseRecipes[i] = RecipeResponse{
+				ID:          id,
+				Name:        rcp["name"],
+				Description: rcp["description"],
+				Ingredients: strings.Split(rcp["ingredients"], ","),
+			}
+		}
+		json.NewEncoder(w).Encode(responseRecipes)
 	}
 }

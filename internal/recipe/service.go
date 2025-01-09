@@ -17,7 +17,7 @@ func (s *Service) CreateRecipe(name, description string, ingredients []string) i
 }
 
 func (s *Service) GetRecipes(ids []int) []map[string]string {
-	return s.repository.GetRecipes(ids)
+	return s.repository.FindRecipesByIds(ids)
 }
 
 func (s *Service) GetRecipeById(id int) (map[string]string, error) {
@@ -28,4 +28,8 @@ func (s *Service) GetRecipeById(id int) (map[string]string, error) {
 	}
 
 	return recipe, nil
+}
+
+func (s *Service) FindAllRecipes() []map[string]string {
+	return s.repository.FindAllRecipes()
 }
