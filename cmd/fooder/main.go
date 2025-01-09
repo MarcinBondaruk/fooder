@@ -1,16 +1,24 @@
 package main
 
 import (
+	"database/sql"
 	"github.com/MarcinBondaruk/fooder/internal/api"
 	"github.com/MarcinBondaruk/fooder/internal/cooking_list"
 	"github.com/MarcinBondaruk/fooder/internal/recipe"
+	_ "github.com/mattn/go-sqlite3"
 	"log"
 	"net/http"
 )
 
 func main() {
+	db, err := sql.Open("sqlite3", "/app/fooder.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
 	// bootstrap, DI, Logging, whatever
-	recipeRepository := recipe.NewInMemoryRepository()
+	recipeRepository := recipe.NewSqliteRepository(db)
 	cookingListRepository := cooking_list.NewInMemoryRepository()
 	recipeSvc := recipe.NewService(recipeRepository)
 	clSvc := cooking_list.NewService(cookingListRepository)
