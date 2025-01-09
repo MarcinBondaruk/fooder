@@ -3,7 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/MarcinBondaruk/fooder/src/recipe"
+	"github.com/MarcinBondaruk/fooder/internal/recipe"
 	"net/http"
 	"strconv"
 	"strings"

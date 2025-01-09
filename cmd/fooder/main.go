@@ -1,17 +1,17 @@
 package main
 
 import (
-	"github.com/MarcinBondaruk/fooder/src/api"
-	"github.com/MarcinBondaruk/fooder/src/cooking_list"
-	"github.com/MarcinBondaruk/fooder/src/recipe"
+	"github.com/MarcinBondaruk/fooder/internal/api"
+	"github.com/MarcinBondaruk/fooder/internal/cooking_list"
+	"github.com/MarcinBondaruk/fooder/internal/recipe"
 	"log"
 	"net/http"
 )
 
 func main() {
+	// bootstrap, DI, Logging, whatever
 	recipeRepository := recipe.NewInMemoryRepository()
 	cookingListRepository := cooking_list.NewInMemoryRepository()
-
 	recipeSvc := recipe.NewService(recipeRepository)
 	clSvc := cooking_list.NewService(cookingListRepository)
 

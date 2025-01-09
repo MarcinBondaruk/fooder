@@ -1,0 +1,9 @@
+services:
+  fooder:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./fooder.db:/app/fooder.db
