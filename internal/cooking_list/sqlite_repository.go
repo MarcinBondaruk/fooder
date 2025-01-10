@@ -2,7 +2,7 @@ package cooking_list
 
 import (
 	"database/sql"
-	"fmt"
+	"errors"
 	"log"
 	"strconv"
 	"strings"
@@ -30,68 +30,69 @@ func NewSqliteRepository(db *sql.DB) *SqliteRepository {
 	}
 }
 
-func (r *SqliteRepository) CreateCookingList(recipeID int) int {
+func (r *SqliteRepository) createCookingList(cookingList CookingList) (int, error) {
 	sql := `INSERT INTO cooking_list (recipes) VALUES (:recipes)`
 
-	result, err := r.db.Exec(sql, strconv.Itoa(recipeID))
+	result, err := r.db.Exec(sql, serializeRecipes(cookingList.recipes))
 
 	if err != nil {
-		log.Println("failed to insert cooking list", err)
-		return 0
+		return 0, errors.New("failed to insert cooking list")
 	}
 
 	id, _ := result.LastInsertId()
-	return int(id)
+	return int(id), nil
 }
 
-func (r *SqliteRepository) AddRecipeToCookingList(cookingListID, recipeID int) {
-	queryResult, err := r.db.Query("SELECT recipes FROM cooking_list WHERE id = :id", cookingListID)
+func (r *SqliteRepository) updateCookingList(cookingList CookingList) error {
+	serializedRecipes := serializeRecipes(cookingList.recipes)
+
+	_, err := r.db.Exec("UPDATE cooking_list SET recipes = :recipes WHERE id = :id", serializedRecipes, cookingList.ID)
 	if err != nil {
-		log.Println("failed to retrieve cooking list", err)
-		return
+		return errors.New("failed to update a cooking list")
 	}
-	defer queryResult.Close()
 
-	var recipesResult string
-	if queryResult.Next() {
-		err := queryResult.Scan(&recipesResult)
-		if err != nil {
-			log.Println("failed to scan a cooking list", err)
-			return
-		}
-	}
-	queryResult.Close()
-
-	recipeStringIds := strings.Split(recipesResult, ",")
-	recipeStringIds = append(recipeStringIds, strconv.Itoa(recipeID))
-
-	_, err = r.db.Exec("UPDATE cooking_list SET recipes = :recipes WHERE id = :id", strings.Join(recipeStringIds, ","), cookingListID)
-	if err != nil {
-		log.Println("failed to update a cooking list", err)
-		return
-	}
+	return nil
 }
 
-func (r *SqliteRepository) ViewCookingList(cookingListID int) []int {
-	var recipesResult string
-	result := r.db.QueryRow("SELECT recipes FROM cooking_list WHERE id = :id", cookingListID)
+func (r *SqliteRepository) getCookingList(cookingListID int) (CookingList, error) {
+	var cookingList CookingList
+	var serializedRecipes string
+	result := r.db.QueryRow("SELECT id, recipes FROM cooking_list WHERE id = :id", cookingListID)
 
-	err := result.Scan(&recipesResult)
+	err := result.Scan(&cookingList.ID, &serializedRecipes)
 	if err != nil {
-		log.Println("failed to scan a cooking list", err)
-	}
-
-	recipesStringIds := strings.Split(recipesResult, ",")
-	fmt.Println(recipesStringIds)
-	recipeIDs := make([]int, len(recipesStringIds))
-
-	for i, id := range recipesStringIds {
-		intID, err := strconv.Atoi(id)
-		if err != nil {
-			log.Println("failed to convert string to int", err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return CookingList{}, errors.New("no cooking list found")
 		}
-		recipeIDs[i] = intID
+
+		return CookingList{}, errors.New("failed to scan a cooking list")
 	}
 
-	return recipeIDs
+	cookingList.recipes = deserializeRecipes(serializedRecipes)
+
+	return cookingList, nil
+}
+
+func serializeRecipes(recipes []int) string {
+	tmp := make([]string, len(recipes))
+	for i, recipeID := range recipes {
+		tmp[i] = strconv.Itoa(recipeID)
+	}
+
+	return strings.Join(tmp, ",")
+}
+
+func deserializeRecipes(serializedRecipes string) []int {
+	tmp := strings.Split(serializedRecipes, ",")
+	recipes := make([]int, len(tmp))
+
+	for i, recipeID := range tmp {
+		recipeID, err := strconv.Atoi(recipeID)
+		if err != nil {
+			log.Println("failed to deserialize recipe id:", recipeID, err)
+		}
+		recipes[i] = recipeID
+	}
+
+	return recipes
 }

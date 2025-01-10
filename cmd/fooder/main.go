@@ -33,7 +33,7 @@ func main() {
 
 	http.HandleFunc("PATCH /api/v1/cooking-lists/{id}", api.AddRecipeToCookingListHandler(clSvc))
 
-	http.HandleFunc("GET /api/v1/cooking-lists/{id}/shopping-list", api.GenerateShoppingListHandler(recipeSvc, clSvc))
+	//http.HandleFunc("GET /api/v1/cooking-lists/{id}/shopping-list", api.GenerateShoppingListHandler(recipeSvc, clSvc))
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

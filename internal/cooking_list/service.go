@@ -11,18 +11,31 @@ func NewService(repository Repository) *Service {
 }
 
 func (s *Service) CreateCookingList(recipeID int) int {
-	return s.repository.CreateCookingList(recipeID)
+	cookingList := CookingList{recipes: []int{recipeID}}
+
+	return s.repository.createCookingList(cookingList)
 }
 
 func (s *Service) AddRecipeToCookingList(cookingListID, recipeID int) error {
-	// get cooking list
-	// add recipe to cooking list
-	// update cooking list
-	s.repository.AddRecipeToCookingList(cookingListID, recipeID)
+	cookingList, err := s.repository.getCookingList(cookingListID)
+	if err != nil {
+		return err
+	}
+
+	cookingList.addRecipe(recipeID)
+
+	err = s.repository.updateCookingList(cookingList)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
-func (s *Service) ViewCookingList(id int) []int {
-	return s.repository.ViewCookingList(id)
+func (s *Service) ViewCookingList(id int) (CookingList, error) {
+	cookingList, err := s.repository.getCookingList(id)
+	if err != nil {
+		return CookingList{}, err
+	}
+	return cookingList, nil
 }

@@ -4,10 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/MarcinBondaruk/fooder/internal/cooking_list"
-	"github.com/MarcinBondaruk/fooder/internal/recipe"
 	"net/http"
 	"strconv"
-	"strings"
 )
 
 func CreateCookingListHandler(clSvc *cooking_list.Service) http.HandlerFunc {
@@ -48,35 +46,23 @@ func AddRecipeToCookingListHandler(clSvc *cooking_list.Service) http.HandlerFunc
 	}
 }
 
-func GenerateShoppingListHandler(recipeSvc *recipe.Service, clSvc *cooking_list.Service) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		id, err := strconv.Atoi(r.PathValue("id"))
-		if err != nil {
-			http.Error(w, "Invalid id", http.StatusBadRequest)
-			return
-		}
-
-		cookingList := clSvc.ViewCookingList(id)
-		if len(cookingList) == 0 {
-			json.NewEncoder(w).Encode(ShoppingListResponse{
-				ShoppingList: []string{},
-			})
-
-			w.Header().Set("Content-Type", "application/json")
-			return
-		}
-
-		recipes := recipeSvc.GetRecipes(cookingList)
-
-		var shoppingList []string
-		for _, rcp := range recipes {
-			ingredients := strings.Split(rcp["ingredients"], ",")
-			shoppingList = append(shoppingList, ingredients...)
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(ShoppingListResponse{
-			ShoppingList: shoppingList,
-		})
-	}
-}
+//func GenerateShoppingListHandler(recipeSvc *recipe.Service, clSvc *cooking_list.Service) http.HandlerFunc {
+//	return func(w http.ResponseWriter, r *http.Request) {
+//		id, err := strconv.Atoi(r.PathValue("id"))
+//		if err != nil {
+//			http.Error(w, "Invalid id", http.StatusBadRequest)
+//			return
+//		}
+//
+//		cookingList, err := clSvc.ViewCookingList(id)
+//		if err != nil {
+//			http.Error(w, "Couldn't get cooking list", http.StatusNotFound)
+//			return
+//		}
+//
+//		w.Header().Set("Content-Type", "application/json")
+//		json.NewEncoder(w).Encode(ShoppingListResponse{
+//			ShoppingList: shoppingList,
+//		})
+//	}
+//}
