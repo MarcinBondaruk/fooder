@@ -10,8 +10,8 @@ func NewService(repository Repository) *Service {
 	}
 }
 
-func (s *Service) CreateCookingList() int {
-	return s.repository.CreateCookingList()
+func (s *Service) CreateCookingList(recipeID int) int {
+	return s.repository.CreateCookingList(recipeID)
 }
 
 func (s *Service) AddRecipeToCookingList(cookingListID, recipeID int) error {

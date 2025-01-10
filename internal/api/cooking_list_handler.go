@@ -12,7 +12,13 @@ import (
 
 func CreateCookingListHandler(clSvc *cooking_list.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id := clSvc.CreateCookingList()
+		var req CreateCookingListRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "Invalid contents", http.StatusBadRequest)
+			return
+		}
+
+		id := clSvc.CreateCookingList(req.RecipeID)
 		w.Header().Set("Location", fmt.Sprintf("/api/v1/cooking-lists/%d", id))
 		w.WriteHeader(http.StatusCreated)
 	}

@@ -19,7 +19,7 @@ func main() {
 
 	// bootstrap, DI, Logging, whatever
 	recipeRepository := recipe.NewSqliteRepository(db)
-	cookingListRepository := cooking_list.NewInMemoryRepository()
+	cookingListRepository := cooking_list.NewSqliteRepository(db)
 	recipeSvc := recipe.NewService(recipeRepository)
 	clSvc := cooking_list.NewService(cookingListRepository)
 
