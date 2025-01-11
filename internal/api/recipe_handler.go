@@ -4,10 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/MarcinBondaruk/fooder/internal/recipe"
-	"log"
 	"net/http"
 	"strconv"
-	"strings"
 )
 
 func CreateRecipeHandler(recipeSvc *recipe.Service) http.HandlerFunc {
@@ -18,7 +16,10 @@ func CreateRecipeHandler(recipeSvc *recipe.Service) http.HandlerFunc {
 			return
 		}
 
-		id := recipeSvc.CreateRecipe(req.Name, req.Description, req.Ingredients)
+		id, err := recipeSvc.CreateRecipe(recipe.NewRecipe(req.Name, req.Description, req.Ingredients))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 
 		w.Header().Set("Location", fmt.Sprintf("/api/v1/recipes/%d", id))
 		w.WriteHeader(http.StatusCreated)
@@ -33,7 +34,7 @@ func ViewRecipeHandler(recipeSvc *recipe.Service) http.HandlerFunc {
 			return
 		}
 
-		rcp, err := recipeSvc.GetRecipeById(id)
+		rcp, err := recipeSvc.GetRecipe(id)
 		if err != nil {
 			http.Error(w, "Recipe not found", http.StatusNotFound)
 			return
@@ -42,9 +43,9 @@ func ViewRecipeHandler(recipeSvc *recipe.Service) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(RecipeResponse{
 			ID:          id,
-			Name:        rcp["name"],
-			Description: rcp["description"],
-			Ingredients: strings.Split(rcp["ingredients"], ","),
+			Name:        rcp.Name(),
+			Description: rcp.Description(),
+			Ingredients: rcp.Ingredients(),
 		})
 	}
 }
@@ -52,28 +53,19 @@ func ViewRecipeHandler(recipeSvc *recipe.Service) http.HandlerFunc {
 func ListRecipesHandler(recipeSvc *recipe.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		rcps := recipeSvc.FindAllRecipes()
-		//if err != nil {
-		//	http.Error(w, "Error during retrieval", http.StatusInternalServerError)
-		//	return
-		//}
-
-		w.Header().Set("Content-Type", "application/json")
 
 		responseRecipes := make([]RecipeResponse, len(rcps))
 
 		for i, rcp := range rcps {
-			id, err := strconv.Atoi(rcp["id"])
-			if err != nil {
-				log.Println(err)
-			}
-			
 			responseRecipes[i] = RecipeResponse{
-				ID:          id,
-				Name:        rcp["name"],
-				Description: rcp["description"],
-				Ingredients: strings.Split(rcp["ingredients"], ","),
+				ID:          rcp.ID(),
+				Name:        rcp.Name(),
+				Description: rcp.Description(),
+				Ingredients: rcp.Ingredients(),
 			}
 		}
+
+		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(responseRecipes)
 	}
 }

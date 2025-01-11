@@ -1,5 +1,5 @@
 package api
 
 type ShoppingListResponse struct {
-	ShoppingList []string `json:"shoppingList"`
+	ShoppingList map[string]int `json:"shoppingList"`
 }

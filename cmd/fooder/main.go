@@ -21,7 +21,7 @@ func main() {
 	recipeRepository := recipe.NewSqliteRepository(db)
 	cookingListRepository := cooking_list.NewSqliteRepository(db)
 	recipeSvc := recipe.NewService(recipeRepository)
-	clSvc := cooking_list.NewService(cookingListRepository)
+	clSvc := cooking_list.NewService(recipeSvc, cookingListRepository)
 
 	http.HandleFunc("POST /api/v1/recipes", api.CreateRecipeHandler(recipeSvc))
 
@@ -33,7 +33,9 @@ func main() {
 
 	http.HandleFunc("PATCH /api/v1/cooking-lists/{id}", api.AddRecipeToCookingListHandler(clSvc))
 
-	//http.HandleFunc("GET /api/v1/cooking-lists/{id}/shopping-list", api.GenerateShoppingListHandler(recipeSvc, clSvc))
+	http.HandleFunc("GET /api/v1/cooking-lists/{id}", api.ViewCookingListHandler(clSvc))
+
+	http.HandleFunc("GET /api/v1/cooking-lists/{id}/shopping-list", api.GenerateShoppingListHandler(clSvc))
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
