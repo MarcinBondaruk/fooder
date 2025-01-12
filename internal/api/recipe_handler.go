@@ -66,6 +66,8 @@ func ListRecipesHandler(recipeSvc *recipe.Service) http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
+		// todo: add proper cors support
+		w.Header().Set("Access-Control-Allow-Origin", "*")
 		json.NewEncoder(w).Encode(responseRecipes)
 	}
 }
