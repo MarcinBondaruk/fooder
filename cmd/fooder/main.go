@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"github.com/MarcinBondaruk/fooder/internal/api"
 	"github.com/MarcinBondaruk/fooder/internal/cooking_list"
+	"github.com/MarcinBondaruk/fooder/internal/middleware"
 	"github.com/MarcinBondaruk/fooder/internal/recipe"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
@@ -23,19 +24,28 @@ func main() {
 	recipeSvc := recipe.NewService(recipeRepository)
 	clSvc := cooking_list.NewService(recipeSvc, cookingListRepository)
 
-	http.HandleFunc("POST /api/v1/recipes", api.CreateRecipeHandler(recipeSvc))
+	// allowed origins should come from env - todo later
+	allowedOrigins := "http://localhost:3000"
 
-	http.HandleFunc("GET /api/v1/recipes/{id}", api.ViewRecipeHandler(recipeSvc))
+	// middlewares
+	commonMiddlewares := []middleware.Middleware{
+		middleware.Logging,
+		middleware.NewCorsMiddleware(allowedOrigins),
+	}
 
-	http.HandleFunc("GET /api/v1/recipes", api.ListRecipesHandler(recipeSvc))
+	http.Handle("POST /api/v1/recipes", middleware.Chain(api.CreateRecipeHandler(recipeSvc), commonMiddlewares...))
 
-	http.HandleFunc("POST /api/v1/cooking-lists", api.CreateCookingListHandler(clSvc))
+	http.Handle("GET /api/v1/recipes/{id}", middleware.Chain(api.ViewRecipeHandler(recipeSvc), commonMiddlewares...))
 
-	http.HandleFunc("PATCH /api/v1/cooking-lists/{id}", api.AddRecipeToCookingListHandler(clSvc))
+	http.Handle("GET /api/v1/recipes", middleware.Chain(api.ListRecipesHandler(recipeSvc), commonMiddlewares...))
 
-	http.HandleFunc("GET /api/v1/cooking-lists/{id}", api.ViewCookingListHandler(clSvc))
+	http.Handle("POST /api/v1/cooking-lists", middleware.Chain(api.CreateCookingListHandler(clSvc), commonMiddlewares...))
 
-	http.HandleFunc("GET /api/v1/cooking-lists/{id}/shopping-list", api.GenerateShoppingListHandler(clSvc))
+	http.Handle("PATCH /api/v1/cooking-lists/{id}", middleware.Chain(api.AddRecipeToCookingListHandler(clSvc), commonMiddlewares...))
+
+	http.Handle("GET /api/v1/cooking-lists/{id}", middleware.Chain(api.ViewCookingListHandler(clSvc), commonMiddlewares...))
+
+	http.Handle("GET /api/v1/cooking-lists/{id}/shopping-list", middleware.Chain(api.GenerateShoppingListHandler(clSvc), commonMiddlewares...))
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
