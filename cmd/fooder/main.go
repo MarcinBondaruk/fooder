@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"github.com/MarcinBondaruk/fooder/internal/api"
 	"github.com/MarcinBondaruk/fooder/internal/cooking_list"
-	"github.com/MarcinBondaruk/fooder/internal/middleware"
+	"github.com/MarcinBondaruk/fooder/internal/framework/middleware"
 	"github.com/MarcinBondaruk/fooder/internal/recipe"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
@@ -12,13 +12,15 @@ import (
 )
 
 func main() {
+	// todo: switch to postgres
 	db, err := sql.Open("sqlite3", "/app/fooder.db")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
-	// bootstrap, DI, Logging, whatever
+	// todo: centralize envs
+	// todo: add DI
 	recipeRepository := recipe.NewSqliteRepository(db)
 	cookingListRepository := cooking_list.NewSqliteRepository(db)
 	recipeSvc := recipe.NewService(recipeRepository)
@@ -33,6 +35,8 @@ func main() {
 		middleware.NewCorsMiddleware(allowedOrigins),
 	}
 
+	// todo: encapsulate routes in router package
+	// todo: add context support in handlers
 	http.Handle("POST /api/v1/recipes", middleware.Chain(api.CreateRecipeHandler(recipeSvc), commonMiddlewares...))
 
 	http.Handle("GET /api/v1/recipes/{id}", middleware.Chain(api.ViewRecipeHandler(recipeSvc), commonMiddlewares...))
