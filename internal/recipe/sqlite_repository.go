@@ -94,8 +94,6 @@ func (r *SqliteRepository) getRecipesByIds(ids []int) ([]Recipe, error) {
 			return nil, errors.New("failed to scan recipes: " + err.Error())
 		}
 
-		fmt.Printf("populating: %+v\n", recipeID)
-
 		recipes = append(recipes, Recipe{
 			recipeID,
 			name,

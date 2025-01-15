@@ -84,7 +84,6 @@ func GenerateShoppingListHandler(clSvc *cooking_list.Service) http.HandlerFunc {
 		}
 
 		shoppingList, err := clSvc.GenerateShoppingList(id)
-		fmt.Printf("Shopping List: %+v\n", shoppingList)
 		if err != nil {
 			http.Error(w, "could not generate shopping list", http.StatusInternalServerError)
 			return

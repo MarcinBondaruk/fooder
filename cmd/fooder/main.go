@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"github.com/MarcinBondaruk/fooder/internal/api"
 	"github.com/MarcinBondaruk/fooder/internal/cooking_list"
+	"github.com/MarcinBondaruk/fooder/internal/framework/env"
 	"github.com/MarcinBondaruk/fooder/internal/framework/middleware"
 	"github.com/MarcinBondaruk/fooder/internal/recipe"
 	_ "github.com/mattn/go-sqlite3"
@@ -12,7 +13,14 @@ import (
 )
 
 func main() {
+	// init env wrapper
+	envs, err := env.NewEnv()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	// todo: switch to postgres
+	// todo: use env struct
 	db, err := sql.Open("sqlite3", "/app/fooder.db")
 	if err != nil {
 		log.Fatal(err)
@@ -26,13 +34,10 @@ func main() {
 	recipeSvc := recipe.NewService(recipeRepository)
 	clSvc := cooking_list.NewService(recipeSvc, cookingListRepository)
 
-	// allowed origins should come from env - todo later
-	allowedOrigins := "http://localhost:3000"
-
 	// middlewares
 	commonMiddlewares := []middleware.Middleware{
 		middleware.Logging,
-		middleware.NewCorsMiddleware(allowedOrigins),
+		middleware.NewCorsMiddleware(envs.AllowedOrigins()),
 	}
 
 	// todo: encapsulate routes in router package
