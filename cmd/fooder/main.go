@@ -27,7 +27,6 @@ func main() {
 	}
 	defer db.Close()
 
-	// todo: centralize envs
 	// todo: add DI
 	recipeRepository := recipe.NewSqliteRepository(db)
 	cookingListRepository := cooking_list.NewSqliteRepository(db)

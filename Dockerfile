@@ -1,3 +1,4 @@
+# used newer version to my local one just out of curiosity
 FROM golang:1.24rc1-alpine3.21 AS base
 
 ENV CGO_ENABLED=1
