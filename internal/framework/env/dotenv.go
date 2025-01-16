@@ -19,13 +19,24 @@ func NewEnv() (*Env, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	sqliteDsn := os.Getenv("SQLITE_DSN")
+	if sqliteDsn == "" {
+		return nil, errors.New("SQLITE_DSN is required")
+	}
+
 	return &Env{
 		allowedOrigins: allowedOrigins,
+		sqliteDsn:      sqliteDsn,
 	}, nil
 }
 
 func (e *Env) AllowedOrigins() []string {
 	return e.allowedOrigins
+}
+
+func (e *Env) SqliteDSN() string {
+	return e.sqliteDsn
 }
 
 func initAllowedOrigins(allowedOrigins string) ([]string, error) {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/MarcinBondaruk/fooder/internal/framework/di"
 	"github.com/MarcinBondaruk/fooder/internal/framework/env"
 	"github.com/MarcinBondaruk/fooder/internal/framework/router"
 	_ "github.com/mattn/go-sqlite3"
@@ -9,6 +10,9 @@ import (
 )
 
 func main() {
+	// todo: authorization for post requests
+	// todo: bot protection - rate limiting, robots.txt
+
 	// init env wrapper
 	log.Println("Initializing envs")
 	envs, err := env.NewEnv()
@@ -16,11 +20,18 @@ func main() {
 		log.Fatal(err)
 	}
 
-	//todo: init dependency container
-	//todo: init middlewares
+	c, err := di.NewContainer(envs)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer c.TearDown()
+
+	//todo: init middlewares ?
 
 	log.Println("Initializing router")
-	r := router.NewRouter(envs)
+	r := router.NewRouter(envs, c)
+
+	// todo: better server configuration
 	s := &http.Server{
 		Addr:    ":8080",
 		Handler: r,
