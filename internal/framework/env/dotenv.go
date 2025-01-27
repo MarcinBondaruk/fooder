@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 )
 
 // Env Crate this with NewEnv.
 type Env struct {
 	allowedOrigins []string
+	apiKey         string
+	serverPort     int
 	sqliteDsn      string
 }
 
@@ -20,19 +23,49 @@ func NewEnv() (*Env, error) {
 		return nil, err
 	}
 
+	apiKey := os.Getenv("API_KEY")
+
 	sqliteDsn := os.Getenv("SQLITE_DSN")
 	if sqliteDsn == "" {
 		return nil, errors.New("SQLITE_DSN is required")
 	}
 
+	serverPort, err := initServerPort(os.Getenv("SERVER_PORT"))
+	if err != nil {
+		return nil, err
+	}
+
 	return &Env{
 		allowedOrigins: allowedOrigins,
+		apiKey:         apiKey,
+		serverPort:     serverPort,
 		sqliteDsn:      sqliteDsn,
 	}, nil
 }
 
+func initServerPort(serverPort string) (int, error) {
+	port, err := strconv.Atoi(serverPort)
+	if err != nil {
+		return 0, err
+	}
+
+	if port <= 1024 || port > 65535 {
+		return 0, fmt.Errorf("invalid server port %s", serverPort)
+	}
+
+	return port, nil
+}
+
 func (e *Env) AllowedOrigins() []string {
 	return e.allowedOrigins
+}
+
+func (e *Env) ApiKey() string {
+	return e.apiKey
+}
+
+func (e *Env) ServerPort() int {
+	return e.serverPort
 }
 
 func (e *Env) SqliteDSN() string {

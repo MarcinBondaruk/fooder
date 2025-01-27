@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/MarcinBondaruk/fooder/internal/framework/di"
 	"github.com/MarcinBondaruk/fooder/internal/framework/env"
 	"github.com/MarcinBondaruk/fooder/internal/framework/router"
@@ -10,7 +11,6 @@ import (
 )
 
 func main() {
-	// todo: authorization for post requests
 	// todo: bot protection - rate limiting, robots.txt
 
 	// init env wrapper
@@ -31,9 +31,9 @@ func main() {
 	log.Println("Initializing router")
 	r := router.NewRouter(envs, c)
 
-	// todo: better server configuration
+	// todo: better server configuration max timeout and stuff
 	s := &http.Server{
-		Addr:    ":8080",
+		Addr:    fmt.Sprintf(":%d", envs.ServerPort()),
 		Handler: r,
 	}
 
