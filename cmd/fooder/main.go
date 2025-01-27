@@ -26,8 +26,6 @@ func main() {
 	}
 	defer c.TearDown()
 
-	//todo: init middlewares ?
-
 	log.Println("Initializing router")
 	r := router.NewRouter(envs, c)
 
