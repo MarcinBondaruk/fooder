@@ -36,12 +36,17 @@ func NewRouter(envs *env.Env, c *di.Container) *http.ServeMux {
 
 	m.Handle("GET /api/v1/cooking-lists/{id}/shopping-list", middleware.Chain(api.GenerateShoppingListHandler(c.CookingListService()), commonMiddlewares...))
 
-	// HTML
+	// PUBLIC UI
 	m.Handle("GET /", http.RedirectHandler("/home", http.StatusFound))
 
-	m.Handle("GET /home", middleware.Chain(ui.HomePageHandler(), commonMiddlewares...))
+	m.Handle("GET /home", middleware.Chain(ui.HomePageHandler(c.RecipeService()), commonMiddlewares...))
 
-	m.Handle("GET /recipes/{id}", middleware.Chain(ui.RecipeDetailsPageHandler(), commonMiddlewares...))
+	m.Handle("GET /recipes/{id}", middleware.Chain(ui.RecipeDetailsPageHandler(c.RecipeService()), commonMiddlewares...))
+
+	// ADMIN UI
+	m.Handle("GET /admin/create-recipe", middleware.Chain(ui.ShowCreateRecipeForm(), commonMiddlewares...))
+
+	m.Handle("POST /admin/recipes/create", middleware.Chain(ui.HandleCreateRecipe(c.RecipeService()), commonMiddlewares...))
 
 	return m
 }
