@@ -1,0 +1,55 @@
+{{- define "admin_login" }}
+<html xmlns="http://www.w3.org/1999/html">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes">
+        <title>Fooder - Login</title>
+
+        <style>
+            body {
+                display: flex;
+                justify-content: center; /* poziomo */
+                align-items: center;     /* pionowo */
+                height: 100vh;           /* pełna wysokość ekranu */
+            }
+
+            form {
+                align-items: center;
+                background: white;
+                padding: 2rem;
+                border-radius: 12px;
+                box-shadow: 0 2px rgba(0,0,0,0.1);
+                max-width: 600px;
+            }
+
+            label {
+                font-size: x-small;
+                color: darkgrey;
+            }
+
+            button {
+                margin-top: 0.5rem;
+                padding: 0.5rem 2rem;
+                background-color: #0077cc;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-size: 1rem;
+                cursor: pointer;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <form action="/admin/login-submit" method="post">
+                <h3>Log in to continue</h3>
+                <label for="email">email:</label><br>
+                <input id="email" type="text"><br>
+                <label for="password">password:</label><br>
+                <input id="password" type="password"><br>
+                <button type="submit">submit</button>
+            </form>
+        </div>
+    </body>
+</html>
+{{- end }}

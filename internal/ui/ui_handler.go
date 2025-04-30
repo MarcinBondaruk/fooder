@@ -89,3 +89,23 @@ func HandleCreateRecipe(recipeSvc *recipe.Service) http.HandlerFunc {
 		http.Redirect(w, r, "/home", http.StatusSeeOther)
 	}
 }
+
+func AdminLoginPage() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		templates.ExecuteTemplate(w, "admin_login", nil)
+	}
+}
+
+func AdminLoginSubmit() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// sanitize data
+		//
+		http.Redirect(w, r, "/admin/panel", http.StatusSeeOther)
+	}
+}
+
+func AdminPanelPage() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		templates.ExecuteTemplate(w, "admin_panel", nil)
+	}
+}

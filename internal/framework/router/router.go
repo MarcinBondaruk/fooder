@@ -44,6 +44,12 @@ func NewRouter(envs *env.Env, c *di.Container) *http.ServeMux {
 	m.Handle("GET /recipes/{id}", middleware.Chain(ui.RecipeDetailsPageHandler(c.RecipeService()), commonMiddlewares...))
 
 	// ADMIN UI
+	m.Handle("GET /admin/login", middleware.Chain(ui.AdminLoginPage(), commonMiddlewares...))
+
+	m.Handle("POST /admin/login-submit", middleware.Chain(ui.AdminLoginSubmit(), commonMiddlewares...))
+
+	m.Handle("GET /admin/panel", middleware.Chain(ui.AdminPanelPage(), commonMiddlewares...))
+
 	m.Handle("GET /admin/create-recipe", middleware.Chain(ui.ShowCreateRecipeForm(), commonMiddlewares...))
 
 	m.Handle("POST /admin/recipes/create", middleware.Chain(ui.HandleCreateRecipe(c.RecipeService()), commonMiddlewares...))
