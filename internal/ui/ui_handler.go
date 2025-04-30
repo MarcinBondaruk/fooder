@@ -96,14 +96,6 @@ func AdminLoginPage() http.HandlerFunc {
 	}
 }
 
-func AdminLoginSubmit() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// sanitize data
-		//
-		http.Redirect(w, r, "/admin/panel", http.StatusSeeOther)
-	}
-}
-
 func AdminPanelPage() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		templates.ExecuteTemplate(w, "admin_panel", nil)

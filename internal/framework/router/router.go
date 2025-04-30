@@ -6,6 +6,7 @@ import (
 	"github.com/MarcinBondaruk/fooder/internal/framework/env"
 	"github.com/MarcinBondaruk/fooder/internal/framework/middleware"
 	"github.com/MarcinBondaruk/fooder/internal/ui"
+	"github.com/MarcinBondaruk/fooder/internal/user"
 	"net/http"
 )
 
@@ -17,6 +18,7 @@ func NewRouter(envs *env.Env, c *di.Container) *http.ServeMux {
 	}
 
 	commonAndAuthorizedMiddlewares := append(commonMiddlewares, middleware.NewApiKeyAuthorization(envs.ApiKey()))
+	commonAndUserAuth := append(commonMiddlewares, middleware.NewCookieBasedAuthorization(c.AuthService()))
 
 	m := http.NewServeMux()
 
@@ -46,13 +48,13 @@ func NewRouter(envs *env.Env, c *di.Container) *http.ServeMux {
 	// ADMIN UI
 	m.Handle("GET /admin/login", middleware.Chain(ui.AdminLoginPage(), commonMiddlewares...))
 
-	m.Handle("POST /admin/login-submit", middleware.Chain(ui.AdminLoginSubmit(), commonMiddlewares...))
+	m.Handle("POST /admin/login-submit", middleware.Chain(user.LoginSubmitHandler(c.UserService()), commonMiddlewares...))
 
-	m.Handle("GET /admin/panel", middleware.Chain(ui.AdminPanelPage(), commonMiddlewares...))
+	m.Handle("GET /admin/panel", middleware.Chain(ui.AdminPanelPage(), commonAndUserAuth...))
 
-	m.Handle("GET /admin/create-recipe", middleware.Chain(ui.ShowCreateRecipeForm(), commonMiddlewares...))
+	m.Handle("GET /admin/create-recipe", middleware.Chain(ui.ShowCreateRecipeForm(), commonAndUserAuth...))
 
-	m.Handle("POST /admin/recipes/create", middleware.Chain(ui.HandleCreateRecipe(c.RecipeService()), commonMiddlewares...))
+	m.Handle("POST /admin/recipes/create", middleware.Chain(ui.HandleCreateRecipe(c.RecipeService()), commonAndUserAuth...))
 
 	return m
 }
