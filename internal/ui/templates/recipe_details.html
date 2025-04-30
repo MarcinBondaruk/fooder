@@ -1,0 +1,40 @@
+{{- define "recipe_details" }}
+<html lang="pl-PL">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes">
+
+    <title>Fooder - Recipe Name</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #f9f9f9;
+            margin: 0;
+            padding: 2rem;
+        }
+
+        .recipeCard {
+            display: block;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 1rem;
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.2s ease;
+        }
+    </style>
+</head>
+<body>
+<div class="recipeCard">
+    <h3>Recipe Name: {{ .Name }}</h3>
+    <p>Description: {{ .Description }}</p>
+    <ul>
+        {{- range .Ingredients }}
+        <li> {{ . }} </li>
+        {{- end }}
+    </ul>
+</div>
+</body>
+</html>
+{{- end }}

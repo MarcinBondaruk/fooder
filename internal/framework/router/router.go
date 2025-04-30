@@ -5,8 +5,7 @@ import (
 	"github.com/MarcinBondaruk/fooder/internal/framework/di"
 	"github.com/MarcinBondaruk/fooder/internal/framework/env"
 	"github.com/MarcinBondaruk/fooder/internal/framework/middleware"
-	"html/template"
-	"log"
+	"github.com/MarcinBondaruk/fooder/internal/ui"
 	"net/http"
 )
 
@@ -40,24 +39,9 @@ func NewRouter(envs *env.Env, c *di.Container) *http.ServeMux {
 	// HTML
 	m.Handle("GET /", http.RedirectHandler("/home", http.StatusFound))
 
-	m.Handle("GET /home", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		type Book struct {
-			NumberOfPages int
-		}
+	m.Handle("GET /home", middleware.Chain(ui.HomePageHandler(), commonMiddlewares...))
 
-		book := Book{NumberOfPages: 10}
-
-		tmpl, err := template.New("home").Parse("There are {{ .NumberOfPages }} pages.")
-		if err != nil {
-			log.Println(err)
-		}
-
-		w.WriteHeader(http.StatusOK)
-		err = tmpl.Execute(w, book)
-		if err != nil {
-			log.Println(err)
-		}
-	}))
+	m.Handle("GET /recipes/{id}", middleware.Chain(ui.RecipeDetailsPageHandler(), commonMiddlewares...))
 
 	return m
 }
