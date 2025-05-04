@@ -28,12 +28,17 @@ func NewContainer(envs *env.Env) (*Container, error) {
 		return nil, err
 	}
 
+	err = db.Ping()
+	if err != nil {
+		return nil, err
+	}
+
 	tokenStorage := make(map[string]struct{})
 
 	authRepository := auth.NewInMemoryRepository(tokenStorage)
 	authSvc := auth.NewService(authRepository)
 
-	userRepository := user.NewSqliteRepository()
+	userRepository := user.NewSqliteRepository(db)
 	userService := user.NewService(authSvc, userRepository)
 
 	recipeRepository := recipe.NewSqliteRepository(db)

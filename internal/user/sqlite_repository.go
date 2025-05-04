@@ -1,16 +1,65 @@
 package user
 
+import (
+	"database/sql"
+	"errors"
+	"log"
+)
+
 type SqliteRepository struct {
+	db *sql.DB
 }
 
-func NewSqliteRepository() *SqliteRepository {
-	return &SqliteRepository{}
+func NewSqliteRepository(db *sql.DB) *SqliteRepository {
+	query := `
+	CREATE TABLE IF NOT EXISTS users (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		email TEXT UNIQUE NOT NULL,
+		name VARCHAR(63),
+		password VARCHAR(63) NOT NULL
+	)`
+
+	if _, err := db.Exec(query); err != nil {
+		log.Fatalf("Failed to create users table: %v", err)
+	}
+
+	return &SqliteRepository{
+		db: db,
+	}
 }
 
+// todo: return user id
 func (r *SqliteRepository) addUser(user User) error {
+	result, err := r.db.Exec(
+		"INSERT INTO users (email, name, password) VALUES (:email, :name, :password)",
+		user.Email,
+		user.Name,
+		user.Password,
+	)
+	if err != nil {
+		return err
+	}
+
+	_, err = result.LastInsertId()
+	if err != nil {
+		return errors.New("failed to retrieve user id" + err.Error())
+	}
+
 	return nil
 }
 
 func (r *SqliteRepository) getUser(email string) (User, error) {
-	return User{}, nil
+	user := User{}
+
+	query := "SELECT id, email, name, password FROM users WHERE email = :id"
+	row := r.db.QueryRow(query, email)
+	err := row.Scan(&user.ID, &user.Email, &user.Name, &user.Password)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return user, nil
+		}
+		log.Fatalf("Failed to find user by email: %v", err)
+	}
+
+	return user, nil
 }
