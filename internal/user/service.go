@@ -1,8 +1,6 @@
 package user
 
 import (
-	"crypto/rand"
-	"encoding/hex"
 	"errors"
 	"github.com/MarcinBondaruk/fooder/internal/auth"
 )
@@ -30,13 +28,7 @@ func (s *Service) LoginUser(email, password string) (string, error) {
 		return "", err
 	}
 
-	b := make([]byte, 32) // 256-bit
-	if _, err := rand.Read(b); err != nil {
-		return "", err
-	}
-	token := hex.EncodeToString(b)
-
-	err = s.authSvc.StoreToken(token)
+	token, err := s.authSvc.NewToken()
 	if err != nil {
 		return "", err
 	}
