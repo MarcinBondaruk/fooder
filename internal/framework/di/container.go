@@ -33,7 +33,8 @@ func NewContainer(envs *env.Env) (*Container, error) {
 	authRepository := auth.NewInMemoryRepository(tokenStorage)
 	authSvc := auth.NewService(authRepository)
 
-	userService := user.NewService(authSvc)
+	userRepository := user.NewSqliteRepository()
+	userService := user.NewService(authSvc, userRepository)
 
 	recipeRepository := recipe.NewSqliteRepository(db)
 	recipeSvc := recipe.NewService(recipeRepository)

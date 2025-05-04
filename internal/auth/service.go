@@ -1,5 +1,7 @@
 package auth
 
+import "errors"
+
 type Service struct {
 	repository Repository
 }
@@ -21,4 +23,12 @@ func (s *Service) VerifyToken(token string) error {
 
 func (s *Service) StoreToken(token string) error {
 	return s.repository.addToken(token)
+}
+
+func (s *Service) Authenticate(password, userPassword string) error {
+	if password != userPassword {
+		return errors.New("invalid credentials")
+	}
+
+	return nil
 }

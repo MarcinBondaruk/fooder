@@ -8,18 +8,26 @@ import (
 )
 
 type Service struct {
-	authSvc *auth.Service
+	authSvc    *auth.Service
+	repository Repository
 }
 
-func NewService(authSvc *auth.Service) *Service {
+func NewService(authSvc *auth.Service, repository Repository) *Service {
 	return &Service{
-		authSvc: authSvc,
+		authSvc:    authSvc,
+		repository: repository,
 	}
 }
 
 func (s *Service) LoginUser(email, password string) (string, error) {
-	if email != "admin@bendit.com" || password != "dupadupa" {
-		return "", errors.New("login failed")
+	user, err := s.repository.getUser(email)
+	if err != nil {
+		return "", errors.New("invalid credentials")
+	}
+
+	err = s.authSvc.Authenticate(password, user.Password)
+	if err != nil {
+		return "", err
 	}
 
 	b := make([]byte, 32) // 256-bit
@@ -28,10 +36,25 @@ func (s *Service) LoginUser(email, password string) (string, error) {
 	}
 	token := hex.EncodeToString(b)
 
-	err := s.authSvc.StoreToken(token)
+	err = s.authSvc.StoreToken(token)
 	if err != nil {
 		return "", err
 	}
 
 	return token, nil
+}
+
+func (s *Service) CreateUser(email, password string) error {
+	user := User{
+		email,
+		nil,
+		password,
+	}
+
+	err := s.repository.addUser(user)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
