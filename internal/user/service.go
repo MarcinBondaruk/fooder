@@ -38,9 +38,9 @@ func (s *Service) LoginUser(email, password string) (string, error) {
 
 func (s *Service) CreateUser(email, password string) error {
 	user := User{
-		email,
-		nil,
-		password,
+		Email:    email,
+		Name:     nil,
+		Password: password,
 	}
 
 	err := s.repository.addUser(user)

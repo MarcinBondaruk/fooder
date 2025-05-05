@@ -17,6 +17,10 @@ COPY . .
 # magic buildkit cache to save compilation
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg/mod \
+    go build -o fooder-cli ./cmd/fooder-cli/main.go
+
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    --mount=type=cache,target=/go/pkg/mod \
     go build -o fooder ./cmd/fooder/main.go
 
 FROM alpine:3.21
@@ -25,6 +29,7 @@ RUN apk add --no-cache sqlite
 
 WORKDIR /app
 COPY --from=build /app/fooder .
+COPY --from=build /app/fooder-cli .
 
 EXPOSE 8080
 CMD ["./fooder"]

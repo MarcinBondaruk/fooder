@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"github.com/MarcinBondaruk/fooder/internal/auth"
 	"github.com/MarcinBondaruk/fooder/internal/cooking_list"
+	"github.com/MarcinBondaruk/fooder/internal/framework/database"
 	"github.com/MarcinBondaruk/fooder/internal/framework/env"
 	"github.com/MarcinBondaruk/fooder/internal/recipe"
 	"github.com/MarcinBondaruk/fooder/internal/user"
@@ -23,12 +24,7 @@ type Container struct {
 }
 
 func NewContainer(envs *env.Env) (*Container, error) {
-	db, err := sql.Open("sqlite3", envs.SqliteDSN())
-	if err != nil {
-		return nil, err
-	}
-
-	err = db.Ping()
+	db, err := database.NewSqlite(envs.SqliteDSN())
 	if err != nil {
 		return nil, err
 	}
