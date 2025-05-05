@@ -47,6 +47,10 @@ func (s *Service) storeToken(token string) error {
 	return s.repository.addToken(token)
 }
 
+func (s *Service) DeleteToken(token string) {
+	s.repository.deleteToken(token)
+}
+
 func (s *Service) Authenticate(password, userPassword string) error {
 	if password != userPassword {
 		return errors.New("invalid credentials")

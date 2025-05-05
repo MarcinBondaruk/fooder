@@ -24,13 +24,13 @@ func NewCookieBasedAuthorization(authSvc *auth.Service) func(http.Handler) http.
 			c, err := r.Cookie("auth_token")
 
 			if err != nil {
-				http.Error(w, "no auth cookie", http.StatusUnauthorized)
+				http.Redirect(w, r, "/admin/login", http.StatusSeeOther)
 				return
 			}
 
 			err = authSvc.VerifyToken(c.Value)
 			if err != nil {
-				http.Error(w, "invalid auth cookie", http.StatusUnauthorized)
+				http.Redirect(w, r, "/admin/login", http.StatusSeeOther)
 				return
 			}
 

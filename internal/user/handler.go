@@ -31,3 +31,23 @@ func LoginSubmitHandler(userSvc *Service) http.HandlerFunc {
 		http.Redirect(w, r, "/admin/panel", http.StatusSeeOther)
 	}
 }
+
+func LogoutHandler(userSvc *Service) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		c, _ := r.Cookie("auth_token")
+
+		userSvc.LogoutUser(c.Value)
+
+		// delete cookie
+		cookie := &http.Cookie{
+			Name:     "auth_token",
+			Value:    "",
+			MaxAge:   -1,
+			Path:     "/",
+			HttpOnly: true,
+		}
+		http.SetCookie(w, cookie)
+
+		http.Redirect(w, r, "/admin/login", http.StatusSeeOther)
+	}
+}

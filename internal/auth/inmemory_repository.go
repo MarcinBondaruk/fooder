@@ -26,3 +26,7 @@ func (r *InMemoryRepository) findToken(token string) (string, error) {
 
 	return token, nil
 }
+
+func (r *InMemoryRepository) deleteToken(token string) {
+	delete(r.storage, token)
+}

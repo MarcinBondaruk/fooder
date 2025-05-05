@@ -1,20 +1,49 @@
 {{- define "admin_panel" }}
 <html lang="pl-PL">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes">
-
-        <style>
-            body {
-                font-family: sans-serif;
-                background: #f9f9f9;
-                margin: 0;
-                padding: 2rem;
-            }
-        </style>
-    </head>
-    <body>
-        <h1>Dashboard</h1>
-    </body>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes">
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #f9f9f9;
+            margin: 0;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #fff;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .logout-button {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .logout-button:hover {
+            background-color: #c0392b;
+        }
+        main {
+            padding: 2rem;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Admin Panel</h1>
+    <form action="/admin/logout" method="GET">
+        <button class="logout-button" type="submit">Logout</button>
+    </form>
+</header>
+<main>
+    <h2>Dashboard</h2>
+</main>
+</body>
 </html>
 {{- end }}

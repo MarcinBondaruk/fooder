@@ -36,6 +36,10 @@ func (s *Service) LoginUser(email, password string) (string, error) {
 	return token, nil
 }
 
+func (s *Service) LogoutUser(token string) {
+	s.authSvc.DeleteToken(token)
+}
+
 func (s *Service) CreateUser(email, password string) error {
 	user := User{
 		Email:    email,
