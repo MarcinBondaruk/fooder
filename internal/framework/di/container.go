@@ -3,12 +3,14 @@ package di
 import (
 	"database/sql"
 	"github.com/MarcinBondaruk/fooder/internal/auth"
+	"github.com/MarcinBondaruk/fooder/internal/auth/login_limiter"
 	"github.com/MarcinBondaruk/fooder/internal/cooking_list"
 	"github.com/MarcinBondaruk/fooder/internal/framework/database"
 	"github.com/MarcinBondaruk/fooder/internal/framework/env"
 	"github.com/MarcinBondaruk/fooder/internal/recipe"
 	"github.com/MarcinBondaruk/fooder/internal/user"
 	"log"
+	"time"
 )
 
 type Services struct {
@@ -18,9 +20,15 @@ type Services struct {
 	userService    *user.Service
 }
 
+type Utils struct {
+	loginLimiter *login_limiter.LoginLimiter
+}
+
 type Container struct {
+	stopCh   chan struct{}
 	db       *sql.DB
 	services *Services
+	utils    *Utils
 }
 
 func NewContainer(envs *env.Env) (*Container, error) {
@@ -28,6 +36,10 @@ func NewContainer(envs *env.Env) (*Container, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	stopCh := make(chan struct{})
+	loginLimiter := login_limiter.NewLoginLimiter(3, 5*time.Minute)
+	loginLimiter.StartCleaner(stopCh)
 
 	tokenStorage := make(map[string]struct{})
 
@@ -44,12 +56,16 @@ func NewContainer(envs *env.Env) (*Container, error) {
 	clSvc := cooking_list.NewService(recipeSvc, cookingListRepository)
 
 	return &Container{
-		db: db,
+		stopCh: stopCh,
+		db:     db,
 		services: &Services{
 			authService:    authSvc,
 			cookingService: clSvc,
 			recipeService:  recipeSvc,
 			userService:    userService,
+		},
+		utils: &Utils{
+			loginLimiter: loginLimiter,
 		},
 	}, nil
 }
@@ -59,6 +75,8 @@ func (c *Container) TearDown() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	close(c.stopCh)
 }
 
 func (c *Container) RecipeService() *recipe.Service {
@@ -75,4 +93,8 @@ func (c *Container) UserService() *user.Service {
 
 func (c *Container) AuthService() *auth.Service {
 	return c.services.authService
+}
+
+func (c *Container) LoginLimiter() *login_limiter.LoginLimiter {
+	return c.utils.loginLimiter
 }

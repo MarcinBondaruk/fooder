@@ -5,20 +5,18 @@ import (
 	"time"
 )
 
-const defaultCleanupInterval = 5 * time.Minute
-
 type LoginLimiter struct {
-	mu       *sync.Mutex
+	mu       sync.Mutex
 	limit    int
-	window   time.Duration
-	attempts map[string][]string
+	timeout  time.Duration
+	attempts map[string][]time.Time
 }
 
-func NewLoginLimiter(limit int, window time.Duration) *LoginLimiter {
+func NewLoginLimiter(limit int, timeout time.Duration) *LoginLimiter {
 	return &LoginLimiter{
-		attempts: make(map[string][]string),
+		attempts: make(map[string][]time.Time),
 		limit:    limit,
-		window:   window,
+		timeout:  timeout,
 	}
 }
 
@@ -33,15 +31,12 @@ func (ll *LoginLimiter) Register(ip string) bool {
 		return false
 	}
 
-	attempts = append(attempts, timestamp.String())
+	ll.attempts[ip] = append(attempts, timestamp)
 	return true
 }
 
-func (ll *LoginLimiter) StartCleaner(interval time.Duration, stopCh <-chan struct{}) {
-	if interval <= 0 {
-		interval = defaultCleanupInterval
-	}
-	ticker := time.NewTicker(interval)
+func (ll *LoginLimiter) StartCleaner(stopCh <-chan struct{}) {
+	ticker := time.NewTicker(ll.timeout)
 	go func() {
 		defer ticker.Stop()
 		for {
@@ -56,5 +51,19 @@ func (ll *LoginLimiter) StartCleaner(interval time.Duration, stopCh <-chan struc
 }
 
 func (ll *LoginLimiter) cleanup() {
+	ll.mu.Lock()
+	defer ll.mu.Unlock()
 
+	cutoff := time.Now().Add(-ll.timeout)
+
+	for ip, times := range ll.attempts {
+		if len(times) == 0 {
+			delete(ll.attempts, ip)
+			continue
+		}
+
+		if times[len(times)-1].Before(cutoff) {
+			delete(ll.attempts, ip)
+		}
+	}
 }

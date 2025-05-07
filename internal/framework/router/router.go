@@ -48,9 +48,9 @@ func NewRouter(envs *env.Env, c *di.Container) *http.ServeMux {
 	// ADMIN UI
 	m.Handle("GET /admin/login", middleware.Chain(ui.AdminLoginPage(), commonMiddlewares...))
 
-	m.Handle("GET /admin/logout", middleware.Chain(user.LogoutHandler(c.UserService()), commonAndUserAuth...))
+	m.Handle("GET /admin/logout", middleware.Chain(user.LogoutHandler(c.UserService()), commonMiddlewares...))
 
-	m.Handle("POST /admin/login-submit", middleware.Chain(user.LoginSubmitHandler(c.UserService()), commonMiddlewares...))
+	m.Handle("POST /admin/login-submit", middleware.Chain(user.LoginSubmitHandler(c.UserService()), append(commonMiddlewares, middleware.LoginLimiter(c.LoginLimiter()))...))
 
 	m.Handle("GET /admin/panel", middleware.Chain(ui.AdminPanelPage(), commonAndUserAuth...))
 
