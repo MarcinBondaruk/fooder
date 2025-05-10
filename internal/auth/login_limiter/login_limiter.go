@@ -20,6 +20,8 @@ func NewLoginLimiter(limit int, timeout time.Duration) *LoginLimiter {
 	}
 }
 
+// Register failed login attempt by ip
+// Return false when too many attempts
 func (ll *LoginLimiter) Register(ip string) bool {
 	ll.mu.Lock()
 	defer ll.mu.Unlock()
@@ -35,6 +37,15 @@ func (ll *LoginLimiter) Register(ip string) bool {
 	return true
 }
 
+// Release clears all login attempts for given ip
+func (ll *LoginLimiter) Release(ip string) {
+	ll.mu.Lock()
+	defer ll.mu.Unlock()
+
+	delete(ll.attempts, ip)
+}
+
+// StartCleaner starts timeout cleaning goroutine
 func (ll *LoginLimiter) StartCleaner(stopCh <-chan struct{}) {
 	ticker := time.NewTicker(ll.timeout)
 	go func() {
