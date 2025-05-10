@@ -41,6 +41,8 @@ func NewRouter(envs *env.Env, c *di.Container) *http.ServeMux {
 	// PUBLIC UI
 	m.Handle("GET /", http.RedirectHandler("/home", http.StatusFound))
 
+	m.Handle("GET /favicon.ico", http.NotFoundHandler())
+
 	m.Handle("GET /home", middleware.Chain(ui.HomePageHandler(c.RecipeService()), commonMiddlewares...))
 
 	m.Handle("GET /recipes/{id}", middleware.Chain(ui.RecipeDetailsPageHandler(c.RecipeService()), commonMiddlewares...))
