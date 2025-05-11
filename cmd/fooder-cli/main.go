@@ -58,11 +58,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = container.UserService().CreateUser(email, password)
+	id, err := container.UserService().CreateUser(email, password)
 	if err != nil {
 		fmt.Println("Failed to create user:", err)
 		os.Exit(1)
 	}
 
-	fmt.Println("✅ User created successfully.")
+	fmt.Printf("%d", id)
 }

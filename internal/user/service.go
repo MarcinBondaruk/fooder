@@ -40,17 +40,17 @@ func (s *Service) LogoutUser(token string) {
 	s.authSvc.DeleteToken(token)
 }
 
-func (s *Service) CreateUser(email, password string) error {
+func (s *Service) CreateUser(email, password string) (int, error) {
 	user := User{
 		Email:    email,
 		Name:     nil,
 		Password: password,
 	}
 
-	err := s.repository.addUser(user)
+	id, err := s.repository.addUser(user)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
+	return id, nil
 }

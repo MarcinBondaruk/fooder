@@ -28,8 +28,7 @@ func NewSqliteRepository(db *sql.DB) *SqliteRepository {
 	}
 }
 
-// todo: return user id
-func (r *SqliteRepository) addUser(user User) error {
+func (r *SqliteRepository) addUser(user User) (int, error) {
 	result, err := r.db.Exec(
 		"INSERT INTO users (email, name, password) VALUES (:email, :name, :password)",
 		user.Email,
@@ -37,15 +36,15 @@ func (r *SqliteRepository) addUser(user User) error {
 		user.Password,
 	)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	_, err = result.LastInsertId()
+	id, err := result.LastInsertId()
 	if err != nil {
-		return errors.New("failed to retrieve user id" + err.Error())
+		return 0, errors.New("failed to retrieve user id" + err.Error())
 	}
 
-	return nil
+	return int(id), nil
 }
 
 func (r *SqliteRepository) getUser(email string) (User, error) {
