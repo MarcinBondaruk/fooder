@@ -7,14 +7,21 @@ import (
 	"github.com/MarcinBondaruk/fooder/internal/framework/router"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
+	"log/slog"
 	"net/http"
+	"os"
 )
 
 func main() {
-	// todo: bot protection - rate limiting, robots.txt
+	logHandlerOpts := &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+	}
+	logHandler := slog.NewJSONHandler(os.Stdout, logHandlerOpts)
+	logger := slog.New(logHandler)
+	slog.SetDefault(logger)
 
 	// init env wrapper
-	log.Println("Initializing envs")
+	log.Println("Initializing envs...")
 	envs, err := env.NewEnv()
 	if err != nil {
 		log.Fatal(err)
@@ -26,7 +33,7 @@ func main() {
 	}
 	defer c.TearDown()
 
-	log.Println("Initializing router")
+	log.Println("Initializing router...")
 	r := router.NewRouter(envs, c)
 
 	// todo: better server configuration max timeout and stuff
