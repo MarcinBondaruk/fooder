@@ -23,7 +23,6 @@ func NewRouter(envs *env.Env, c *di.Container) *http.ServeMux {
 	m := http.NewServeMux()
 
 	// API
-	// todo: add context support in handlers
 	m.Handle("POST /api/v1/recipes", middleware.Chain(api.CreateRecipeHandler(c.RecipeService()), commonAndAuthorizedMiddlewares...))
 
 	m.Handle("GET /api/v1/recipes/{id}", middleware.Chain(api.ViewRecipeHandler(c.RecipeService()), commonMiddlewares...))

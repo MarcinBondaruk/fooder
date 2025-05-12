@@ -1,6 +1,9 @@
 package auth
 
-import "errors"
+import (
+	"context"
+	"errors"
+)
 
 type InMemoryRepository struct {
 	storage map[string]struct{}
@@ -12,13 +15,13 @@ func NewInMemoryRepository(storage map[string]struct{}) *InMemoryRepository {
 	}
 }
 
-func (r *InMemoryRepository) addToken(token string) error {
+func (r *InMemoryRepository) addToken(ctx context.Context, token string) error {
 	r.storage[token] = struct{}{}
 
 	return nil
 }
 
-func (r *InMemoryRepository) findToken(token string) (string, error) {
+func (r *InMemoryRepository) findToken(ctx context.Context, token string) (string, error) {
 	_, ok := r.storage[token]
 	if !ok {
 		return "", errors.New("no match")
@@ -27,6 +30,6 @@ func (r *InMemoryRepository) findToken(token string) (string, error) {
 	return token, nil
 }
 
-func (r *InMemoryRepository) deleteToken(token string) {
+func (r *InMemoryRepository) deleteToken(ctx context.Context, token string) {
 	delete(r.storage, token)
 }

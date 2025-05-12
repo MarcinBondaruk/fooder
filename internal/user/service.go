@@ -1,6 +1,7 @@
 package user
 
 import (
+	"context"
 	"errors"
 	"github.com/MarcinBondaruk/fooder/internal/auth"
 )
@@ -17,18 +18,18 @@ func NewService(authSvc *auth.Service, repository Repository) *Service {
 	}
 }
 
-func (s *Service) LoginUser(email, password string) (string, error) {
-	user, err := s.repository.getUser(email)
+func (s *Service) LoginUser(ctx context.Context, email, password string) (string, error) {
+	user, err := s.repository.getUser(ctx, email)
 	if err != nil {
 		return "", errors.New("invalid credentials")
 	}
 
-	err = s.authSvc.Authenticate(password, user.Password)
+	err = s.authSvc.Authenticate(ctx, password, user.Password)
 	if err != nil {
 		return "", err
 	}
 
-	token, err := s.authSvc.NewToken()
+	token, err := s.authSvc.NewToken(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -36,18 +37,18 @@ func (s *Service) LoginUser(email, password string) (string, error) {
 	return token, nil
 }
 
-func (s *Service) LogoutUser(token string) {
-	s.authSvc.DeleteToken(token)
+func (s *Service) LogoutUser(ctx context.Context, token string) {
+	s.authSvc.DeleteToken(ctx, token)
 }
 
-func (s *Service) CreateUser(email, password string) (int, error) {
+func (s *Service) CreateUser(ctx context.Context, email, password string) (int, error) {
 	user := User{
 		Email:    email,
 		Name:     nil,
 		Password: password,
 	}
 
-	id, err := s.repository.addUser(user)
+	id, err := s.repository.addUser(ctx, user)
 	if err != nil {
 		return 0, err
 	}

@@ -1,7 +1,9 @@
 package auth
 
+import "context"
+
 type Repository interface {
-	addToken(token string) error
-	findToken(token string) (string, error)
-	deleteToken(token string)
+	addToken(ctx context.Context, token string) error
+	findToken(ctx context.Context, token string) (string, error)
+	deleteToken(ctx context.Context, token string)
 }

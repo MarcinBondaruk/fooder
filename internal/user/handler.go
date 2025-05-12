@@ -19,7 +19,7 @@ func LoginSubmitHandler(ll *login_limiter.LoginLimiter, userSvc *Service) http.H
 		email := r.FormValue("email")
 		password := r.FormValue("password")
 
-		token, err := userSvc.LoginUser(email, password)
+		token, err := userSvc.LoginUser(r.Context(), email, password)
 		if err != nil {
 			if !ll.Register(ip) {
 				http.Error(w, "too many attempts", http.StatusUnauthorized)
@@ -48,8 +48,7 @@ func LoginSubmitHandler(ll *login_limiter.LoginLimiter, userSvc *Service) http.H
 func LogoutHandler(userSvc *Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c, _ := r.Cookie("auth_token")
-
-		userSvc.LogoutUser(c.Value)
+		userSvc.LogoutUser(r.Context(), c.Value)
 
 		// delete cookie
 		cookie := &http.Cookie{

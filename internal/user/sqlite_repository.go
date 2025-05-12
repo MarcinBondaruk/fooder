@@ -1,6 +1,7 @@
 package user
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"log"
@@ -28,7 +29,7 @@ func NewSqliteRepository(db *sql.DB) *SqliteRepository {
 	}
 }
 
-func (r *SqliteRepository) addUser(user User) (int, error) {
+func (r *SqliteRepository) addUser(ctx context.Context, user User) (int, error) {
 	result, err := r.db.Exec(
 		"INSERT INTO users (email, name, password) VALUES (:email, :name, :password)",
 		user.Email,
@@ -47,7 +48,7 @@ func (r *SqliteRepository) addUser(user User) (int, error) {
 	return int(id), nil
 }
 
-func (r *SqliteRepository) getUser(email string) (User, error) {
+func (r *SqliteRepository) getUser(ctx context.Context, email string) (User, error) {
 	user := User{}
 
 	query := "SELECT id, email, name, password FROM users WHERE email = :id"

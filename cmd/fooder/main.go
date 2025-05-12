@@ -37,7 +37,6 @@ func main() {
 	log.Println("Initializing router...")
 	r := router.NewRouter(envs, c)
 
-	// todo: better server configuration max timeout and stuff
 	s := &http.Server{
 		Addr:              fmt.Sprintf(":%d", envs.ServerPort()),
 		Handler:           r,
