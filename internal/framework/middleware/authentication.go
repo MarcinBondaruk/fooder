@@ -28,7 +28,7 @@ func NewCookieBasedAuthorization(authSvc *auth.Service) func(http.Handler) http.
 				return
 			}
 
-			err = authSvc.VerifyToken(c.Value)
+			err = authSvc.VerifyToken(r.Context(), c.Value)
 			if err != nil {
 				http.Redirect(w, r, "/admin/login", http.StatusSeeOther)
 				return

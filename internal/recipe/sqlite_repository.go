@@ -1,6 +1,7 @@
 package recipe
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -30,7 +31,7 @@ func NewSqliteRepository(db *sql.DB) *SqliteRepository {
 	}
 }
 
-func (r *SqliteRepository) createRecipe(recipe Recipe) (int, error) {
+func (r *SqliteRepository) createRecipe(ctx context.Context, recipe Recipe) (int, error) {
 	serializedIngredients := strings.Join(recipe.ingredients, ",")
 	result, err := r.db.Exec(
 		"INSERT INTO recipes (name, description, ingredients) VALUES (:name, :description, :ingredients)",
@@ -51,7 +52,7 @@ func (r *SqliteRepository) createRecipe(recipe Recipe) (int, error) {
 	return int(id), nil
 }
 
-func (r *SqliteRepository) getRecipe(id int) (Recipe, error) {
+func (r *SqliteRepository) getRecipe(ctx context.Context, id int) (Recipe, error) {
 	query := `SELECT id, name, description, ingredients FROM recipes WHERE id = :id`
 	row := r.db.QueryRow(query, id)
 
@@ -73,7 +74,7 @@ func (r *SqliteRepository) getRecipe(id int) (Recipe, error) {
 	}, nil
 }
 
-func (r *SqliteRepository) getRecipesByIds(ids []int) ([]Recipe, error) {
+func (r *SqliteRepository) getRecipesByIds(ctx context.Context, ids []int) ([]Recipe, error) {
 	if len(ids) == 0 {
 		return []Recipe{}, nil
 	}
@@ -105,7 +106,7 @@ func (r *SqliteRepository) getRecipesByIds(ids []int) ([]Recipe, error) {
 	return recipes, nil
 }
 
-func (r *SqliteRepository) findAllRecipes() []Recipe {
+func (r *SqliteRepository) findAllRecipes(ctx context.Context) []Recipe {
 	rows, err := r.db.Query("SELECT id, name, description, ingredients FROM recipes")
 	if err != nil {
 		log.Fatalf("Failed to get recipes: %v", err)

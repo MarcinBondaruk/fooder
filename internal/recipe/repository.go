@@ -1,8 +1,10 @@
 package recipe
 
+import "context"
+
 type Repository interface {
-	createRecipe(recipe Recipe) (int, error)
-	getRecipe(id int) (Recipe, error)
-	getRecipesByIds(ids []int) ([]Recipe, error)
-	findAllRecipes() []Recipe
+	createRecipe(ctx context.Context, recipe Recipe) (int, error)
+	getRecipe(ctx context.Context, id int) (Recipe, error)
+	getRecipesByIds(ctx context.Context, ids []int) ([]Recipe, error)
+	findAllRecipes(ctx context.Context) []Recipe
 }

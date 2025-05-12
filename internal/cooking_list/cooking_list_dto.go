@@ -1,4 +1,4 @@
-package api
+package cooking_list
 
 type CreateCookingListRequest struct {
 	RecipeID int `json:"recipeId"`

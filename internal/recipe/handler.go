@@ -1,14 +1,13 @@
-package api
+package recipe
 
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/MarcinBondaruk/fooder/internal/recipe"
 	"net/http"
 	"strconv"
 )
 
-func CreateRecipeHandler(recipeSvc *recipe.Service) http.HandlerFunc {
+func CreateRecipeHandler(recipeSvc *Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req CreateRecipeRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -16,7 +15,7 @@ func CreateRecipeHandler(recipeSvc *recipe.Service) http.HandlerFunc {
 			return
 		}
 
-		id, err := recipeSvc.CreateRecipe(recipe.NewRecipe(req.Name, req.Description, req.Ingredients))
+		id, err := recipeSvc.CreateRecipe(r.Context(), NewRecipe(req.Name, req.Description, req.Ingredients))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
@@ -26,7 +25,7 @@ func CreateRecipeHandler(recipeSvc *recipe.Service) http.HandlerFunc {
 	}
 }
 
-func ViewRecipeHandler(recipeSvc *recipe.Service) http.HandlerFunc {
+func ViewRecipeHandler(recipeSvc *Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
@@ -34,7 +33,7 @@ func ViewRecipeHandler(recipeSvc *recipe.Service) http.HandlerFunc {
 			return
 		}
 
-		rcp, err := recipeSvc.GetRecipe(id)
+		rcp, err := recipeSvc.GetRecipe(r.Context(), id)
 		if err != nil {
 			http.Error(w, "Recipe not found", http.StatusNotFound)
 			return
@@ -50,9 +49,9 @@ func ViewRecipeHandler(recipeSvc *recipe.Service) http.HandlerFunc {
 	}
 }
 
-func ListRecipesHandler(recipeSvc *recipe.Service) http.HandlerFunc {
+func ListRecipesHandler(recipeSvc *Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		rcps := recipeSvc.FindAllRecipes()
+		rcps := recipeSvc.FindAllRecipes(r.Context())
 
 		responseRecipes := make([]RecipeResponse, len(rcps))
 

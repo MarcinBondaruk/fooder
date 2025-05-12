@@ -1,4 +1,4 @@
-package api
+package recipe
 
 type CreateRecipeRequest struct {
 	Name        string   `json:"name"`

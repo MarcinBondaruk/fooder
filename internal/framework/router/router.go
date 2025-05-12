@@ -1,10 +1,11 @@
 package router
 
 import (
-	"github.com/MarcinBondaruk/fooder/internal/api"
+	"github.com/MarcinBondaruk/fooder/internal/cooking_list"
 	"github.com/MarcinBondaruk/fooder/internal/framework/di"
 	"github.com/MarcinBondaruk/fooder/internal/framework/env"
 	"github.com/MarcinBondaruk/fooder/internal/framework/middleware"
+	"github.com/MarcinBondaruk/fooder/internal/recipe"
 	"github.com/MarcinBondaruk/fooder/internal/ui"
 	"github.com/MarcinBondaruk/fooder/internal/user"
 	"net/http"
@@ -23,19 +24,19 @@ func NewRouter(envs *env.Env, c *di.Container) *http.ServeMux {
 	m := http.NewServeMux()
 
 	// API
-	m.Handle("POST /api/v1/recipes", middleware.Chain(api.CreateRecipeHandler(c.RecipeService()), commonAndAuthorizedMiddlewares...))
+	m.Handle("POST /api/v1/recipes", middleware.Chain(recipe.CreateRecipeHandler(c.RecipeService()), commonAndAuthorizedMiddlewares...))
 
-	m.Handle("GET /api/v1/recipes/{id}", middleware.Chain(api.ViewRecipeHandler(c.RecipeService()), commonMiddlewares...))
+	m.Handle("GET /api/v1/recipes/{id}", middleware.Chain(recipe.ViewRecipeHandler(c.RecipeService()), commonMiddlewares...))
 
-	m.Handle("GET /api/v1/recipes", middleware.Chain(api.ListRecipesHandler(c.RecipeService()), commonMiddlewares...))
+	m.Handle("GET /api/v1/recipes", middleware.Chain(recipe.ListRecipesHandler(c.RecipeService()), commonMiddlewares...))
 
-	m.Handle("POST /api/v1/cooking-lists", middleware.Chain(api.CreateCookingListHandler(c.CookingListService()), commonAndAuthorizedMiddlewares...))
+	m.Handle("POST /api/v1/cooking-lists", middleware.Chain(cooking_list.CreateCookingListHandler(c.CookingListService()), commonAndAuthorizedMiddlewares...))
 
-	m.Handle("PATCH /api/v1/cooking-lists/{id}", middleware.Chain(api.AddRecipeToCookingListHandler(c.CookingListService()), commonAndAuthorizedMiddlewares...))
+	m.Handle("PATCH /api/v1/cooking-lists/{id}", middleware.Chain(cooking_list.AddRecipeToCookingListHandler(c.CookingListService()), commonAndAuthorizedMiddlewares...))
 
-	m.Handle("GET /api/v1/cooking-lists/{id}", middleware.Chain(api.ViewCookingListHandler(c.CookingListService()), commonMiddlewares...))
+	m.Handle("GET /api/v1/cooking-lists/{id}", middleware.Chain(cooking_list.ViewCookingListHandler(c.CookingListService()), commonMiddlewares...))
 
-	m.Handle("GET /api/v1/cooking-lists/{id}/shopping-list", middleware.Chain(api.GenerateShoppingListHandler(c.CookingListService()), commonMiddlewares...))
+	m.Handle("GET /api/v1/cooking-lists/{id}/shopping-list", middleware.Chain(cooking_list.GenerateShoppingListHandler(c.CookingListService()), commonMiddlewares...))
 
 	// PUBLIC UI
 	m.Handle("GET /", http.RedirectHandler("/home", http.StatusFound))

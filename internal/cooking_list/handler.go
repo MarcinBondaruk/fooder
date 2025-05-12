@@ -1,14 +1,13 @@
-package api
+package cooking_list
 
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/MarcinBondaruk/fooder/internal/cooking_list"
 	"net/http"
 	"strconv"
 )
 
-func CreateCookingListHandler(clSvc *cooking_list.Service) http.HandlerFunc {
+func CreateCookingListHandler(clSvc *Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req CreateCookingListRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -16,7 +15,7 @@ func CreateCookingListHandler(clSvc *cooking_list.Service) http.HandlerFunc {
 			return
 		}
 
-		id, err := clSvc.CreateCookingList(req.RecipeID)
+		id, err := clSvc.CreateCookingList(r.Context(), req.RecipeID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -27,7 +26,7 @@ func CreateCookingListHandler(clSvc *cooking_list.Service) http.HandlerFunc {
 	}
 }
 
-func ViewCookingListHandler(clSvc *cooking_list.Service) http.HandlerFunc {
+func ViewCookingListHandler(clSvc *Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
@@ -35,7 +34,7 @@ func ViewCookingListHandler(clSvc *cooking_list.Service) http.HandlerFunc {
 			return
 		}
 
-		cookingList, err := clSvc.ViewCookingList(id)
+		cookingList, err := clSvc.ViewCookingList(r.Context(), id)
 		cookingListItems := make([]CookingListItem, len(cookingList.Recipes()))
 		for i, recipeId := range cookingList.Recipes() {
 			cookingListItems[i] = CookingListItem{
@@ -51,7 +50,7 @@ func ViewCookingListHandler(clSvc *cooking_list.Service) http.HandlerFunc {
 	}
 }
 
-func AddRecipeToCookingListHandler(clSvc *cooking_list.Service) http.HandlerFunc {
+func AddRecipeToCookingListHandler(clSvc *Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
@@ -65,7 +64,7 @@ func AddRecipeToCookingListHandler(clSvc *cooking_list.Service) http.HandlerFunc
 			return
 		}
 
-		err = clSvc.AddRecipeToCookingList(id, req.RecipeID)
+		err = clSvc.AddRecipeToCookingList(r.Context(), id, req.RecipeID)
 
 		if err != nil {
 			http.Error(w, "Couldn't add recipe to cooking list", http.StatusConflict)
@@ -75,7 +74,7 @@ func AddRecipeToCookingListHandler(clSvc *cooking_list.Service) http.HandlerFunc
 	}
 }
 
-func GenerateShoppingListHandler(clSvc *cooking_list.Service) http.HandlerFunc {
+func GenerateShoppingListHandler(clSvc *Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
@@ -83,7 +82,7 @@ func GenerateShoppingListHandler(clSvc *cooking_list.Service) http.HandlerFunc {
 			return
 		}
 
-		shoppingList, err := clSvc.GenerateShoppingList(id)
+		shoppingList, err := clSvc.GenerateShoppingList(r.Context(), id)
 		if err != nil {
 			http.Error(w, "could not generate shopping list", http.StatusInternalServerError)
 			return
