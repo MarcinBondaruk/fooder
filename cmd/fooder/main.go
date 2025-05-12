@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
 )
 
 func main() {
@@ -38,8 +39,13 @@ func main() {
 
 	// todo: better server configuration max timeout and stuff
 	s := &http.Server{
-		Addr:    fmt.Sprintf(":%d", envs.ServerPort()),
-		Handler: r,
+		Addr:              fmt.Sprintf(":%d", envs.ServerPort()),
+		Handler:           r,
+		ReadTimeout:       15 * time.Second,
+		WriteTimeout:      15 * time.Second,
+		IdleTimeout:       60 * time.Second,
+		ReadHeaderTimeout: 5 * time.Second,
+		MaxHeaderBytes:    1 << 20, // 1 MB
 	}
 
 	log.Println("Starting http server on port 8080")
