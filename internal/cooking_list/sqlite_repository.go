@@ -32,9 +32,7 @@ func NewSqliteRepository(db *sql.DB) *SqliteRepository {
 }
 
 func (r *SqliteRepository) createCookingList(ctx context.Context, cookingList CookingList) (int, error) {
-	sql := `INSERT INTO cooking_list (recipes) VALUES (:recipes)`
-
-	result, err := r.db.Exec(sql, serializeRecipes(ctx, cookingList.recipes))
+	result, err := r.db.ExecContext(ctx, `INSERT INTO main.cooking_list (recipes) VALUES (:recipes)`, serializeRecipes(cookingList.recipes))
 
 	if err != nil {
 		return 0, errors.New("failed to insert cooking list")
@@ -45,9 +43,9 @@ func (r *SqliteRepository) createCookingList(ctx context.Context, cookingList Co
 }
 
 func (r *SqliteRepository) updateCookingList(ctx context.Context, cookingList CookingList) error {
-	serializedRecipes := serializeRecipes(ctx, cookingList.recipes)
+	serializedRecipes := serializeRecipes(cookingList.recipes)
 
-	_, err := r.db.Exec("UPDATE cooking_list SET recipes = :recipes WHERE id = :id", serializedRecipes, cookingList.ID)
+	_, err := r.db.ExecContext(ctx, "UPDATE main.cooking_list SET recipes = :recipes WHERE id = :id", serializedRecipes, cookingList.ID)
 	if err != nil {
 		return errors.New("failed to update a cooking list")
 	}
@@ -58,7 +56,7 @@ func (r *SqliteRepository) updateCookingList(ctx context.Context, cookingList Co
 func (r *SqliteRepository) getCookingList(ctx context.Context, cookingListID int) (CookingList, error) {
 	var cookingList CookingList
 	var serializedRecipes string
-	result := r.db.QueryRow("SELECT id, recipes FROM cooking_list WHERE id = :id", cookingListID)
+	result := r.db.QueryRowContext(ctx, "SELECT id, recipes FROM main.cooking_list WHERE id = :id", cookingListID)
 
 	err := result.Scan(&cookingList.ID, &serializedRecipes)
 	if err != nil {
@@ -69,12 +67,12 @@ func (r *SqliteRepository) getCookingList(ctx context.Context, cookingListID int
 		return CookingList{}, errors.New("failed to scan a cooking list")
 	}
 
-	cookingList.recipes = deserializeRecipes(ctx, serializedRecipes)
+	cookingList.recipes = deserializeRecipes(serializedRecipes)
 
 	return cookingList, nil
 }
 
-func serializeRecipes(ctx context.Context, recipes []int) string {
+func serializeRecipes(recipes []int) string {
 	tmp := make([]string, len(recipes))
 	for i, recipeID := range recipes {
 		tmp[i] = strconv.Itoa(recipeID)
@@ -83,7 +81,7 @@ func serializeRecipes(ctx context.Context, recipes []int) string {
 	return strings.Join(tmp, ",")
 }
 
-func deserializeRecipes(ctx context.Context, serializedRecipes string) []int {
+func deserializeRecipes(serializedRecipes string) []int {
 	tmp := strings.Split(serializedRecipes, ",")
 	recipes := make([]int, len(tmp))
 

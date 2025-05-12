@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"log"
+	"log/slog"
 	"strconv"
 	"strings"
 )
@@ -33,8 +33,9 @@ func NewSqliteRepository(db *sql.DB) *SqliteRepository {
 
 func (r *SqliteRepository) createRecipe(ctx context.Context, recipe Recipe) (int, error) {
 	serializedIngredients := strings.Join(recipe.ingredients, ",")
-	result, err := r.db.Exec(
-		"INSERT INTO recipes (name, description, ingredients) VALUES (:name, :description, :ingredients)",
+	result, err := r.db.ExecContext(
+		ctx,
+		"INSERT INTO main.recipes (name, description, ingredients) VALUES (:name, :description, :ingredients)",
 		recipe.name,
 		recipe.description,
 		serializedIngredients,
@@ -53,14 +54,14 @@ func (r *SqliteRepository) createRecipe(ctx context.Context, recipe Recipe) (int
 }
 
 func (r *SqliteRepository) getRecipe(ctx context.Context, id int) (Recipe, error) {
-	query := `SELECT id, name, description, ingredients FROM recipes WHERE id = :id`
-	row := r.db.QueryRow(query, id)
+	query := `SELECT id, name, description, ingredients FROM main.recipes WHERE id = :id`
+	row := r.db.QueryRowContext(ctx, query, id)
 
 	var recipeID int
 	var name, description, ingredients string
 	err := row.Scan(&recipeID, &name, &description, &ingredients)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return Recipe{}, nil
 		}
 		log.Fatalf("Failed to find recipe by id: %v", err)
@@ -79,12 +80,21 @@ func (r *SqliteRepository) getRecipesByIds(ctx context.Context, ids []int) ([]Re
 		return []Recipe{}, nil
 	}
 
-	query := fmt.Sprintf("SELECT id, name, description, ingredients FROM recipes WHERE id IN (%s)", serializeRecipeIds(ids))
-	rows, err := r.db.Query(query)
+	rows, err := r.db.QueryContext(
+		ctx,
+		"SELECT id, name, description, ingredients FROM main.recipes WHERE id IN (:recipeIds)",
+		serializeRecipeIds(ids),
+	)
+
 	if err != nil {
 		log.Fatalf("Failed to get recipes: %v", err)
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Error("error on rows close", err)
+		}
+	}()
 
 	var recipes []Recipe
 	for rows.Next() {
@@ -107,11 +117,16 @@ func (r *SqliteRepository) getRecipesByIds(ctx context.Context, ids []int) ([]Re
 }
 
 func (r *SqliteRepository) findAllRecipes(ctx context.Context) []Recipe {
-	rows, err := r.db.Query("SELECT id, name, description, ingredients FROM recipes")
+	rows, err := r.db.QueryContext(ctx, "SELECT id, name, description, ingredients FROM main.recipes")
 	if err != nil {
 		log.Fatalf("Failed to get recipes: %v", err)
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Error("error on rows close", err)
+		}
+	}()
 
 	var recipes []Recipe
 	for rows.Next() {

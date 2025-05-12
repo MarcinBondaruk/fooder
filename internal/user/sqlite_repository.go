@@ -30,8 +30,9 @@ func NewSqliteRepository(db *sql.DB) *SqliteRepository {
 }
 
 func (r *SqliteRepository) addUser(ctx context.Context, user User) (int, error) {
-	result, err := r.db.Exec(
-		"INSERT INTO users (email, name, password) VALUES (:email, :name, :password)",
+	result, err := r.db.ExecContext(
+		ctx,
+		"INSERT INTO main.users (email, name, password) VALUES (:email, :name, :password)",
 		user.Email,
 		user.Name,
 		user.Password,
@@ -51,11 +52,11 @@ func (r *SqliteRepository) addUser(ctx context.Context, user User) (int, error) 
 func (r *SqliteRepository) getUser(ctx context.Context, email string) (User, error) {
 	user := User{}
 
-	query := "SELECT id, email, name, password FROM users WHERE email = :id"
-	row := r.db.QueryRow(query, email)
+	query := "SELECT id, email, name, password FROM main.users WHERE email = :id"
+	row := r.db.QueryRowContext(ctx, query, email)
 	err := row.Scan(&user.ID, &user.Email, &user.Name, &user.Password)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return user, nil
 		}
 		log.Fatalf("Failed to find user by email: %v", err)
