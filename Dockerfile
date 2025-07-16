@@ -30,6 +30,7 @@ RUN apk add --no-cache sqlite
 WORKDIR /app
 COPY --from=build /app/fooder .
 COPY --from=build /app/fooder-cli .
+COPY ./public /app/public/
 
 EXPOSE 8080
 CMD ["./fooder"]

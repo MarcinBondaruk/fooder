@@ -1,0 +1,47 @@
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #fff;
+    padding: 1rem 2rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.login-button {
+    text-decoration: none;
+    background-color: #3c92e7;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+.login-button:hover {
+    background-color: #1888e4;
+}
+.logout-button {
+    text-decoration: none;
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+.logout-button:hover {
+    background-color: #c0392b;
+}
+.create-recipe-button {
+    text-decoration: none;
+    background-color: #95e578;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+.create-recipe-button:hover {
+    background-color: #6fda49;
+}

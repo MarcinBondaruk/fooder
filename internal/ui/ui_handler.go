@@ -16,7 +16,7 @@ var templates = template.Must(template.ParseFS(templateFS, "templates/*.html"))
 
 func HomePageHandler(recipeSvc *recipe.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		rcps := recipeSvc.FindAllRecipes()
+		rcps := recipeSvc.FindAllRecipes(r.Context())
 		recipes := make([]RecipeViewModel, len(rcps))
 
 		for i, rcp := range rcps {
@@ -45,7 +45,7 @@ func RecipeDetailsPageHandler(recipeSvc *recipe.Service) http.HandlerFunc {
 			return
 		}
 
-		rcp, err := recipeSvc.GetRecipe(id)
+		rcp, err := recipeSvc.GetRecipe(r.Context(), id)
 		if err != nil {
 			http.Error(w, "Recipe not found", http.StatusNotFound)
 			return
@@ -81,12 +81,12 @@ func HandleCreateRecipe(recipeSvc *recipe.Service) http.HandlerFunc {
 		description := r.FormValue("description")
 		ingredients := strings.Split(r.FormValue("ingredients"), ",")
 
-		_, err := recipeSvc.CreateRecipe(recipe.NewRecipe(name, description, ingredients))
+		_, err := recipeSvc.CreateRecipe(r.Context(), recipe.NewRecipe(name, description, ingredients))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 
-		http.Redirect(w, r, "/home", http.StatusSeeOther)
+		http.Redirect(w, r, "/admin/panel", http.StatusSeeOther)
 	}
 }
 

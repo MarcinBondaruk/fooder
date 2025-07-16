@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"github.com/MarcinBondaruk/fooder/internal/framework/di"
@@ -58,7 +59,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	id, err := container.UserService().CreateUser(email, password)
+	id, err := container.UserService().CreateUser(context.Background(), email, password)
 	if err != nil {
 		fmt.Println("Failed to create user:", err)
 		os.Exit(1)

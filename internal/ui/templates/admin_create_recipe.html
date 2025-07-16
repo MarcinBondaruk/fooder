@@ -3,16 +3,11 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes">
-
+    <link rel="stylesheet" href="/public/css/common.css">
+    <link rel="stylesheet" href="/public/css/navbar.css">
     <title>Fooder - Dodaj przepis</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            background: #f9f9f9;
-            margin: 0;
-            padding: 2rem;
-        }
 
+    <style>
         form {
             background: white;
             padding: 2rem;
@@ -60,22 +55,31 @@
     </style>
 </head>
 <body>
-<div class="card">
-    <h1>Dodaj nowy przepis</h1>
+    <header>
+        <h1>Admin Panel</h1>
+        <a class="common-button" href="/admin/panel">Panel</a>
+        <a class="common-button" href="/home">Recipes</a>
+        <a class="create-recipe-button" href="/admin/create-recipe">Create Recipe</a>
+        <a class="logout-button" href="/admin/logout">Logout</a>
+    </header>
+    <main>
+        <div class="card">
+            <h1>Dodaj nowy przepis</h1>
 
-    <form action="/admin/recipes/create" method="POST">
-        <label for="name">Nazwa przepisu</label>
-        <input type="text" id="name" name="name" required>
+            <form action="/admin/recipes/create" method="POST">
+                <label for="name">Nazwa przepisu</label>
+                <input type="text" id="name" name="name" required>
 
-        <label for="description">Opis</label>
-        <textarea id="description" name="description" rows="4" required></textarea>
+                <label for="description">Opis</label>
+                <textarea id="description" name="description" rows="4" required></textarea>
 
-        <label for="ingredients">Składniki (oddzielone przecinkami)</label>
-        <input type="text" id="ingredients" name="ingredients" required>
+                <label for="ingredients">Składniki (oddzielone przecinkami)</label>
+                <input type="text" id="ingredients" name="ingredients" required>
 
-        <button type="submit">Zapisz przepis</button>
-    </form>
-</div>
+                <button type="submit">Zapisz przepis</button>
+            </form>
+        </div>
+    </main>
 </body>
 </html>
 {{- end }}

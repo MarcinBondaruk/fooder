@@ -3,6 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes">
+    <link rel="stylesheet" href="/public/css/common.css">
+    <link rel="stylesheet" href="/public/css/navbar.css">
 
     <title>Fooder - Home</title>
     <style>
@@ -47,22 +49,28 @@
 </head>
 
 <body>
-<h1>Welcome to Fooder!</h1>
-
-<div class="grid">
-    {{- range .Recipes }}
-    <a class="card" href="/recipes/{{ .ID }}">
-        <h3>{{ .Name }}</h3>
-        <p>{{ .Description }}</p>
-        <ul>
-            {{- range .Ingredients }}
-            <li>{{ . }}</li>
-            {{- end }}
-        </ul>
-        {{- end }}
-    </a>
-</div>
-
+    <header>
+        <h1>Fooder</h1>
+        <a class="common-button" href="/admin/panel">Panel</a>
+        <a class="common-button" href="/home">Recipes</a>
+        <a class="create-recipe-button" href="/admin/create-recipe">Create Recipe</a>
+        <a class="login-button" href="/admin/login">Login</a>
+    </header>
+    <main>
+        <div class="grid">
+            {{- range .Recipes }}
+            <a class="card" href="/recipes/{{ .ID }}">
+                <h3>{{ .Name }}</h3>
+                <p>{{ .Description }}</p>
+                <ul>
+                    {{- range .Ingredients }}
+                    <li>{{ . }}</li>
+                    {{- end }}
+                </ul>
+                {{- end }}
+            </a>
+        </div>
+    </main>
 </body>
 </html>
 {{- end }}
