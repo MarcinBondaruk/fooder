@@ -49,13 +49,7 @@
 </head>
 
 <body>
-    <header>
-        <h1>Fooder</h1>
-        <a class="common-button" href="/admin/panel">Panel</a>
-        <a class="common-button" href="/home">Recipes</a>
-        <a class="create-recipe-button" href="/admin/create-recipe">Create Recipe</a>
-        <a class="login-button" href="/admin/login">Login</a>
-    </header>
+    {{ template "header" . }}
     <main>
         <div class="grid">
             {{- range .Recipes }}

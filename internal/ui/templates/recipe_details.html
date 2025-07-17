@@ -26,15 +26,18 @@
     </style>
 </head>
 <body>
-<div class="recipeCard">
-    <h3>Recipe Name: {{ .Name }}</h3>
-    <p>Description: {{ .Description }}</p>
-    <ul>
-        {{- range .Ingredients }}
-        <li> {{ . }} </li>
-        {{- end }}
-    </ul>
-</div>
+    {{ template "header" . }}
+    <main>
+        <div class="recipeCard">
+            <h3>Recipe Name: {{ .Name }}</h3>
+            <p>Description: {{ .Description }}</p>
+            <ul>
+                {{- range .Ingredients }}
+                <li> {{ . }} </li>
+                {{- end }}
+            </ul>
+        </div>
+    </main>
 </body>
 </html>
 {{- end }}

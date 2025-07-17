@@ -4,15 +4,16 @@ import (
 	"embed"
 	"github.com/MarcinBondaruk/fooder/internal/recipe"
 	"html/template"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
 )
 
-//go:embed templates/*.html
+//go:embed templates/*.html templates/**/*.html
 var templateFS embed.FS
 
-var templates = template.Must(template.ParseFS(templateFS, "templates/*.html"))
+var templates = template.Must(template.ParseFS(templateFS, "templates/*.html", "templates/**/*.html"))
 
 func HomePageHandler(recipeSvc *recipe.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -33,7 +34,10 @@ func HomePageHandler(recipeSvc *recipe.Service) http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		templates.ExecuteTemplate(w, "home", viewModel)
+		err := templates.ExecuteTemplate(w, "home", viewModel)
+		if err != nil {
+			slog.Error("error parsing template", "error", err)
+		}
 	}
 }
 
@@ -59,7 +63,10 @@ func RecipeDetailsPageHandler(recipeSvc *recipe.Service) http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		templates.ExecuteTemplate(w, "recipe_details", viewModel)
+		err = templates.ExecuteTemplate(w, "recipe_details", viewModel)
+		if err != nil {
+			slog.Error("error parsing home template", "error", err)
+		}
 	}
 }
 
@@ -92,12 +99,18 @@ func HandleCreateRecipe(recipeSvc *recipe.Service) http.HandlerFunc {
 
 func AdminLoginPage() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		templates.ExecuteTemplate(w, "admin_login", nil)
+		err := templates.ExecuteTemplate(w, "admin_login", nil)
+		if err != nil {
+			slog.Error("error parsing home template", "error", err)
+		}
 	}
 }
 
 func AdminPanelPage() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		templates.ExecuteTemplate(w, "admin_panel", nil)
+		err := templates.ExecuteTemplate(w, "admin_panel", nil)
+		if err != nil {
+			slog.Error("error parsing home template", "error", err)
+		}
 	}
 }
