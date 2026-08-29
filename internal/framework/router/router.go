@@ -12,33 +12,23 @@ import (
 	"github.com/MarcinBondaruk/fooder/internal/user"
 )
 
-func NewRouter(envs *env.Env, c *di.Container) *http.ServeMux {
-	// middlewares
-	commonMiddlewares := []middleware.Middleware{
-		middleware.PanicRecover,
-		middleware.Logging,
-		middleware.NewCorsMiddleware(envs.AllowedOrigins()),
-	}
-
-	commonAndAuthorizedMiddlewares := append(commonMiddlewares, middleware.NewApiKeyAuthorization(envs.ApiKey()))
-	commonAndUserAuth := append(commonMiddlewares, middleware.NewCookieBasedAuthorization(c.AuthService()))
-
+func NewRouter(envs *env.Env, c *di.Container) http.Handler {
 	m := http.NewServeMux()
 
 	// API
-	m.Handle("POST /api/v1/recipes", middleware.Chain(recipe.CreateRecipeHandler(c.RecipeService()), commonAndAuthorizedMiddlewares...))
+	m.Handle("POST /api/v1/recipes", middleware.Chain(recipe.CreateRecipeHandler(c.RecipeService()), middleware.NewApiKeyAuthorization(envs.ApiKey())))
 
-	m.Handle("GET /api/v1/recipes/{id}", middleware.Chain(recipe.ViewRecipeHandler(c.RecipeService()), commonMiddlewares...))
+	m.Handle("GET /api/v1/recipes/{id}", middleware.Chain(recipe.ViewRecipeHandler(c.RecipeService())))
 
-	m.Handle("GET /api/v1/recipes", middleware.Chain(recipe.ListRecipesHandler(c.RecipeService()), commonMiddlewares...))
+	m.Handle("GET /api/v1/recipes", middleware.Chain(recipe.ListRecipesHandler(c.RecipeService())))
 
-	m.Handle("POST /api/v1/cooking-lists", middleware.Chain(cooking_list.CreateCookingListHandler(c.CookingListService()), commonAndAuthorizedMiddlewares...))
+	m.Handle("POST /api/v1/cooking-lists", middleware.Chain(cooking_list.CreateCookingListHandler(c.CookingListService()), middleware.NewApiKeyAuthorization(envs.ApiKey())))
 
-	m.Handle("PATCH /api/v1/cooking-lists/{id}", middleware.Chain(cooking_list.AddRecipeToCookingListHandler(c.CookingListService()), commonAndAuthorizedMiddlewares...))
+	m.Handle("PATCH /api/v1/cooking-lists/{id}", middleware.Chain(cooking_list.AddRecipeToCookingListHandler(c.CookingListService()), middleware.NewApiKeyAuthorization(envs.ApiKey())))
 
-	m.Handle("GET /api/v1/cooking-lists/{id}", middleware.Chain(cooking_list.ViewCookingListHandler(c.CookingListService()), commonMiddlewares...))
+	m.Handle("GET /api/v1/cooking-lists/{id}", middleware.Chain(cooking_list.ViewCookingListHandler(c.CookingListService())))
 
-	m.Handle("GET /api/v1/cooking-lists/{id}/shopping-list", middleware.Chain(cooking_list.GenerateShoppingListHandler(c.CookingListService()), commonMiddlewares...))
+	m.Handle("GET /api/v1/cooking-lists/{id}/shopping-list", middleware.Chain(cooking_list.GenerateShoppingListHandler(c.CookingListService())))
 
 	// PUBLIC UI
 	m.Handle("GET /", http.RedirectHandler("/home", http.StatusFound))
@@ -47,22 +37,22 @@ func NewRouter(envs *env.Env, c *di.Container) *http.ServeMux {
 
 	m.Handle("GET /public/", http.StripPrefix("/public/", http.FileServer(http.Dir("public"))))
 
-	m.Handle("GET /home", middleware.Chain(ui.HomePageHandler(c.RecipeService()), commonMiddlewares...))
+	m.Handle("GET /home", middleware.Chain(ui.HomePageHandler(c.RecipeService())))
 
-	m.Handle("GET /recipes/{id}", middleware.Chain(ui.RecipeDetailsPageHandler(c.RecipeService()), commonMiddlewares...))
+	m.Handle("GET /recipes/{id}", middleware.Chain(ui.RecipeDetailsPageHandler(c.RecipeService())))
 
 	// ADMIN UI
-	m.Handle("GET /admin/login", middleware.Chain(ui.AdminLoginPage(), commonMiddlewares...))
+	m.Handle("GET /admin/login", middleware.Chain(ui.AdminLoginPage()))
 
-	m.Handle("GET /admin/logout", middleware.Chain(user.LogoutHandler(c.UserService()), commonMiddlewares...))
+	m.Handle("GET /admin/logout", middleware.Chain(user.LogoutHandler(c.UserService())))
 
-	m.Handle("POST /admin/login-submit", middleware.Chain(user.LoginSubmitHandler(c.LoginLimiter(), c.UserService()), commonMiddlewares...))
+	m.Handle("POST /admin/login-submit", middleware.Chain(user.LoginSubmitHandler(c.LoginLimiter(), c.UserService())))
 
-	m.Handle("GET /admin/panel", middleware.Chain(ui.AdminPanelPage(), commonAndUserAuth...))
+	m.Handle("GET /admin/panel", middleware.Chain(ui.AdminPanelPage(), middleware.NewCookieBasedAuthorization(c.AuthService())))
 
-	m.Handle("GET /admin/create-recipe", middleware.Chain(ui.ShowCreateRecipeForm(), commonAndUserAuth...))
+	m.Handle("GET /admin/create-recipe", middleware.Chain(ui.ShowCreateRecipeForm(), middleware.NewCookieBasedAuthorization(c.AuthService())))
 
-	m.Handle("POST /admin/recipes/create", middleware.Chain(ui.HandleCreateRecipe(c.RecipeService()), commonAndUserAuth...))
+	m.Handle("POST /admin/recipes/create", middleware.Chain(ui.HandleCreateRecipe(c.RecipeService()), middleware.NewCookieBasedAuthorization(c.AuthService())))
 
-	return m
+	return middleware.Chain(m, middleware.PanicRecover(), middleware.LoggingMiddleware(), middleware.NewCorsMiddleware(envs.AllowedOrigins()))
 }
