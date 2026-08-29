@@ -40,7 +40,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer c.TearDown()
 
 	log.Println("Initializing router...")
 	r := router.NewRouter(envs, c)
@@ -71,8 +70,10 @@ func main() {
 
 	err = s.Shutdown(ctx)
 	if err != nil {
-		log.Fatalf("error during shutdown: %v", err)
+		log.Printf("error during shutdown: %v", err)
 	}
 
-	log.Println("server shutdown gracefully")
+	c.TearDown()
+
+	log.Println("server shutdown")
 }
