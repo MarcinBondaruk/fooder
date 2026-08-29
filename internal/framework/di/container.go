@@ -2,6 +2,8 @@ package di
 
 import (
 	"database/sql"
+	"time"
+
 	"github.com/MarcinBondaruk/fooder/internal/auth"
 	"github.com/MarcinBondaruk/fooder/internal/auth/login_limiter"
 	"github.com/MarcinBondaruk/fooder/internal/cooking_list"
@@ -9,8 +11,6 @@ import (
 	"github.com/MarcinBondaruk/fooder/internal/framework/env"
 	"github.com/MarcinBondaruk/fooder/internal/recipe"
 	"github.com/MarcinBondaruk/fooder/internal/user"
-	"log"
-	"time"
 )
 
 type Services struct {
@@ -70,13 +70,14 @@ func NewContainer(envs *env.Env) (*Container, error) {
 	}, nil
 }
 
-func (c *Container) TearDown() {
+func (c *Container) TearDown() error {
 	err := c.db.Close()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	close(c.stopCh)
+	return nil
 }
 
 func (c *Container) RecipeService() *recipe.Service {

@@ -73,7 +73,10 @@ func main() {
 		log.Printf("error during shutdown: %v", err)
 	}
 
-	c.TearDown()
+	err = c.TearDown()
+	if err != nil {
+		log.Printf("error during container shutdown: %v", err)
+	}
 
 	log.Println("server shutdown")
 }
