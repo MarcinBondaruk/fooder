@@ -1,6 +1,8 @@
 package router
 
 import (
+	"net/http"
+
 	"github.com/MarcinBondaruk/fooder/internal/cooking_list"
 	"github.com/MarcinBondaruk/fooder/internal/framework/di"
 	"github.com/MarcinBondaruk/fooder/internal/framework/env"
@@ -8,12 +10,12 @@ import (
 	"github.com/MarcinBondaruk/fooder/internal/recipe"
 	"github.com/MarcinBondaruk/fooder/internal/ui"
 	"github.com/MarcinBondaruk/fooder/internal/user"
-	"net/http"
 )
 
 func NewRouter(envs *env.Env, c *di.Container) *http.ServeMux {
 	// middlewares
 	commonMiddlewares := []middleware.Middleware{
+		middleware.PanicRecover,
 		middleware.Logging,
 		middleware.NewCorsMiddleware(envs.AllowedOrigins()),
 	}
