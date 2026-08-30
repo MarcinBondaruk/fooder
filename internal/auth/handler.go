@@ -1,13 +1,14 @@
-package user
+package auth
 
 import (
-	"github.com/MarcinBondaruk/fooder/internal/auth/login_limiter"
 	"net"
 	"net/http"
 	"strings"
+
+	"github.com/MarcinBondaruk/fooder/internal/auth/login_limiter"
 )
 
-func LoginSubmitHandler(ll *login_limiter.LoginLimiter, userSvc *Service) http.HandlerFunc {
+func LoginSubmitHandler(ll *login_limiter.LoginLimiter, authSvc *Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "invalid form", http.StatusBadRequest)
@@ -19,7 +20,7 @@ func LoginSubmitHandler(ll *login_limiter.LoginLimiter, userSvc *Service) http.H
 		email := r.FormValue("email")
 		password := r.FormValue("password")
 
-		token, err := userSvc.LoginUser(r.Context(), email, password)
+		token, err := authSvc.LoginUser(r.Context(), email, password)
 		if err != nil {
 			if !ll.Register(ip) {
 				http.Error(w, "too many attempts", http.StatusUnauthorized)
@@ -45,10 +46,10 @@ func LoginSubmitHandler(ll *login_limiter.LoginLimiter, userSvc *Service) http.H
 	}
 }
 
-func LogoutHandler(userSvc *Service) http.HandlerFunc {
+func LogoutHandler(authSvc *Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c, _ := r.Cookie("auth_token")
-		userSvc.LogoutUser(r.Context(), c.Value)
+		authSvc.LogoutUser(r.Context(), c.Value)
 
 		// delete cookie
 		cookie := &http.Cookie{
