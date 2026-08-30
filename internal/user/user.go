@@ -1,3 +1,4 @@
+// Package user allows for manipulation of User entities
 package user
 
 type User struct {

@@ -15,13 +15,13 @@ func NewInMemoryTokenRepository(storage map[string]struct{}) *InMemoryTokenRepos
 	}
 }
 
-func (r *InMemoryTokenRepository) addToken(ctx context.Context, token string) error {
+func (r *InMemoryTokenRepository) AddToken(ctx context.Context, token string) error {
 	r.storage[token] = struct{}{}
 
 	return nil
 }
 
-func (r *InMemoryTokenRepository) findToken(ctx context.Context, token string) (string, error) {
+func (r *InMemoryTokenRepository) FindToken(ctx context.Context, token string) (string, error) {
 	_, ok := r.storage[token]
 	if !ok {
 		return "", errors.New("no match")
@@ -30,6 +30,6 @@ func (r *InMemoryTokenRepository) findToken(ctx context.Context, token string) (
 	return token, nil
 }
 
-func (r *InMemoryTokenRepository) deleteToken(ctx context.Context, token string) {
+func (r *InMemoryTokenRepository) DeleteToken(ctx context.Context, token string) {
 	delete(r.storage, token)
 }

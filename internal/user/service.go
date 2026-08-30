@@ -21,7 +21,7 @@ func (s *Service) CreateUser(ctx context.Context, email, password string) (int, 
 		Password: password,
 	}
 
-	id, err := s.repository.addUser(ctx, user)
+	id, err := s.repository.AddUser(ctx, user)
 	if err != nil {
 		return 0, err
 	}

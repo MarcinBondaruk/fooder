@@ -1,10 +1,12 @@
-package user
+package sqlite
 
 import (
 	"context"
 	"database/sql"
 	"errors"
 	"log"
+
+	"github.com/MarcinBondaruk/fooder/internal/user"
 )
 
 type SqliteRepository struct {
@@ -29,7 +31,7 @@ func NewSqliteRepository(db *sql.DB) *SqliteRepository {
 	}
 }
 
-func (r *SqliteRepository) addUser(ctx context.Context, user User) (int, error) {
+func (r *SqliteRepository) AddUser(ctx context.Context, user user.User) (int, error) {
 	result, err := r.db.ExecContext(
 		ctx,
 		"INSERT INTO main.users (email, name, password) VALUES (:email, :name, :password)",
@@ -49,8 +51,8 @@ func (r *SqliteRepository) addUser(ctx context.Context, user User) (int, error) 
 	return int(id), nil
 }
 
-func (r *SqliteRepository) getUser(ctx context.Context, email string) (User, error) {
-	user := User{}
+func (r *SqliteRepository) GetUser(ctx context.Context, email string) (user.User, error) {
+	user := user.User{}
 
 	query := "SELECT id, email, name, password FROM main.users WHERE email = :id"
 	row := r.db.QueryRowContext(ctx, query, email)
