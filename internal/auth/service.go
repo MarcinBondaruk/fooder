@@ -8,26 +8,40 @@ import (
 )
 
 type Service struct {
-	repository Repository
+	credentialsRepo CredentialsRepository
+	tokenRepo       TokenRepository
 }
 
-func NewService(repository Repository) *Service {
+func NewService(credentialsRepo CredentialsRepository, tokenRepo TokenRepository) *Service {
 	return &Service{
-		repository,
+		credentialsRepo,
+		tokenRepo,
 	}
 }
 
-func (s *Service) NewToken(ctx context.Context) (string, error) {
+func (s *Service) LoginUser(ctx context.Context, email, password string) (string, error) {
+	creds, err := s.credentialsRepo.getUserCredentialsByEmail(ctx, email)
+	if err != nil {
+		return "", errors.New("user not found")
+	}
+
+	if password != creds.hashedPassword {
+		return "", errors.New("invalid credentials")
+	}
+	if err != nil {
+		return "", err
+	}
+
 	b := make([]byte, 32) // 256-bit
 
-	_, err := rand.Read(b)
+	_, err = rand.Read(b)
 	if err != nil {
 		return "", err
 	}
 
 	token := hex.EncodeToString(b)
 
-	err = s.storeToken(ctx, token)
+	err = s.tokenRepo.addToken(ctx, token)
 	if err != nil {
 		return "", err
 	}
@@ -35,8 +49,12 @@ func (s *Service) NewToken(ctx context.Context) (string, error) {
 	return token, nil
 }
 
-func (s *Service) VerifyToken(ctx context.Context, token string) error {
-	_, err := s.repository.findToken(ctx, token)
+func (s *Service) LogoutUser(ctx context.Context, token string) {
+	s.tokenRepo.deleteToken(ctx, token)
+}
+
+func (s *Service) verifyToken(ctx context.Context, token string) error {
+	_, err := s.tokenRepo.findToken(ctx, token)
 	if err != nil {
 		return err
 	}
@@ -44,18 +62,6 @@ func (s *Service) VerifyToken(ctx context.Context, token string) error {
 	return nil
 }
 
-func (s *Service) storeToken(ctx context.Context, token string) error {
-	return s.repository.addToken(ctx, token)
-}
-
-func (s *Service) DeleteToken(ctx context.Context, token string) {
-	s.repository.deleteToken(ctx, token)
-}
-
 func (s *Service) Authenticate(ctx context.Context, password, userPassword string) error {
-	if password != userPassword {
-		return errors.New("invalid credentials")
-	}
-
 	return nil
 }

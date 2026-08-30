@@ -5,23 +5,23 @@ import (
 	"errors"
 )
 
-type InMemoryRepository struct {
+type InMemoryTokenRepository struct {
 	storage map[string]struct{}
 }
 
-func NewInMemoryRepository(storage map[string]struct{}) *InMemoryRepository {
-	return &InMemoryRepository{
+func NewInMemoryTokenRepository(storage map[string]struct{}) *InMemoryTokenRepository {
+	return &InMemoryTokenRepository{
 		storage: storage,
 	}
 }
 
-func (r *InMemoryRepository) addToken(ctx context.Context, token string) error {
+func (r *InMemoryTokenRepository) addToken(ctx context.Context, token string) error {
 	r.storage[token] = struct{}{}
 
 	return nil
 }
 
-func (r *InMemoryRepository) findToken(ctx context.Context, token string) (string, error) {
+func (r *InMemoryTokenRepository) findToken(ctx context.Context, token string) (string, error) {
 	_, ok := r.storage[token]
 	if !ok {
 		return "", errors.New("no match")
@@ -30,6 +30,6 @@ func (r *InMemoryRepository) findToken(ctx context.Context, token string) (strin
 	return token, nil
 }
 
-func (r *InMemoryRepository) deleteToken(ctx context.Context, token string) {
+func (r *InMemoryTokenRepository) deleteToken(ctx context.Context, token string) {
 	delete(r.storage, token)
 }
