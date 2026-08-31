@@ -10,11 +10,11 @@ import (
 	"github.com/MarcinBondaruk/fooder/internal/user"
 )
 
-type SqliteRepository struct {
+type UserRepository struct {
 	db *sql.DB
 }
 
-func NewSqliteRepository(db *sql.DB) *SqliteRepository {
+func NewUserRepository(db *sql.DB) *UserRepository {
 	query := `
 	CREATE TABLE IF NOT EXISTS users (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -27,12 +27,12 @@ func NewSqliteRepository(db *sql.DB) *SqliteRepository {
 		log.Fatalf("Failed to create users table: %v", err)
 	}
 
-	return &SqliteRepository{
+	return &UserRepository{
 		db: db,
 	}
 }
 
-func (r *SqliteRepository) AddUser(ctx context.Context, user user.User) (int, error) {
+func (r *UserRepository) AddUser(ctx context.Context, user user.User) (int, error) {
 	result, err := r.db.ExecContext(
 		ctx,
 		"INSERT INTO main.users (email, name, password) VALUES (:email, :name, :password)",
@@ -52,7 +52,7 @@ func (r *SqliteRepository) AddUser(ctx context.Context, user user.User) (int, er
 	return int(id), nil
 }
 
-func (r *SqliteRepository) GetUser(ctx context.Context, email string) (*user.User, error) {
+func (r *UserRepository) GetUser(ctx context.Context, email string) (*user.User, error) {
 	u := user.User{}
 
 	query := "SELECT id, email, name, password FROM main.users WHERE email = :email"
@@ -68,7 +68,7 @@ func (r *SqliteRepository) GetUser(ctx context.Context, email string) (*user.Use
 	return &u, nil
 }
 
-func (ur *SqliteRepository) GetCredentialsByEmail(ctx context.Context, email string) (*auth.UserCredentials, error) {
+func (ur *UserRepository) GetCredentialsByEmail(ctx context.Context, email string) (*auth.UserCredentials, error) {
 	uc := auth.UserCredentials{}
 
 	query := "SELECT id, email, password FROM main.users WHERE email = :email"
@@ -78,6 +78,8 @@ func (ur *SqliteRepository) GetCredentialsByEmail(ctx context.Context, email str
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, auth.ErrCredentialsNotFound
 		}
+
+		return nil, err
 	}
 
 	return &uc, nil

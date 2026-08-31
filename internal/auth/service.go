@@ -53,7 +53,7 @@ func (s *Service) LogoutUser(ctx context.Context, token string) {
 	s.tokenRepo.DeleteToken(ctx, token)
 }
 
-func (s *Service) verifyToken(ctx context.Context, token string) error {
+func (s *Service) VerifyToken(ctx context.Context, token string) error {
 	_, err := s.tokenRepo.FindToken(ctx, token)
 	if err != nil {
 		return err

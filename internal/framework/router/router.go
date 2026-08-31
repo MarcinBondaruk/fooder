@@ -3,13 +3,13 @@ package router
 import (
 	"net/http"
 
+	"github.com/MarcinBondaruk/fooder/internal/auth"
 	"github.com/MarcinBondaruk/fooder/internal/cooking_list"
 	"github.com/MarcinBondaruk/fooder/internal/framework/di"
 	"github.com/MarcinBondaruk/fooder/internal/framework/env"
 	"github.com/MarcinBondaruk/fooder/internal/framework/middleware"
 	"github.com/MarcinBondaruk/fooder/internal/recipe"
 	"github.com/MarcinBondaruk/fooder/internal/ui"
-	"github.com/MarcinBondaruk/fooder/internal/user"
 )
 
 func NewRouter(envs *env.Env, c *di.Container) http.Handler {
@@ -44,9 +44,9 @@ func NewRouter(envs *env.Env, c *di.Container) http.Handler {
 	// ADMIN UI
 	m.Handle("GET /admin/login", middleware.Chain(ui.AdminLoginPage()))
 
-	m.Handle("GET /admin/logout", middleware.Chain(user.LogoutHandler(c.UserService())))
+	m.Handle("GET /admin/logout", middleware.Chain(auth.LogoutHandler(c.AuthService())))
 
-	m.Handle("POST /admin/login-submit", middleware.Chain(user.LoginSubmitHandler(c.LoginLimiter(), c.UserService())))
+	m.Handle("POST /admin/login-submit", middleware.Chain(auth.LoginSubmitHandler(c.LoginLimiter(), c.AuthService())))
 
 	m.Handle("GET /admin/panel", middleware.Chain(ui.AdminPanelPage(), middleware.NewCookieBasedAuthorization(c.AuthService())))
 
