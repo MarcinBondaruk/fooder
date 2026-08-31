@@ -25,7 +25,7 @@ func (s *Service) LoginUser(ctx context.Context, email, password string) (string
 		return "", errors.New("user not found")
 	}
 
-	if password != creds.hashedPassword {
+	if password != creds.HashedPassword {
 		return "", errors.New("invalid credentials")
 	}
 	if err != nil {

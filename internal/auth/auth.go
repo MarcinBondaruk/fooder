@@ -1,6 +1,7 @@
 package auth
 
 type UserCredentials struct {
-	email          string
-	hashedPassword string
+	ID             int
+	Email          string
+	HashedPassword string
 }

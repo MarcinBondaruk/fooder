@@ -6,6 +6,7 @@ import (
 	"errors"
 	"log"
 
+	"github.com/MarcinBondaruk/fooder/internal/auth"
 	"github.com/MarcinBondaruk/fooder/internal/user"
 )
 
@@ -51,18 +52,33 @@ func (r *SqliteRepository) AddUser(ctx context.Context, user user.User) (int, er
 	return int(id), nil
 }
 
-func (r *SqliteRepository) GetUser(ctx context.Context, email string) (user.User, error) {
-	user := user.User{}
+func (r *SqliteRepository) GetUser(ctx context.Context, email string) (*user.User, error) {
+	u := user.User{}
 
-	query := "SELECT id, email, name, password FROM main.users WHERE email = :id"
+	query := "SELECT id, email, name, password FROM main.users WHERE email = :email"
 	row := r.db.QueryRowContext(ctx, query, email)
-	err := row.Scan(&user.ID, &user.Email, &user.Name, &user.Password)
+	err := row.Scan(&u.ID, &u.Email, &u.Name, &u.Password)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return user, nil
+			return nil, user.ErrUserNotFound
 		}
-		log.Fatalf("Failed to find user by email: %v", err)
+		return nil, err
 	}
 
-	return user, nil
+	return &u, nil
+}
+
+func (ur *SqliteRepository) GetCredentialsByEmail(ctx context.Context, email string) (*auth.UserCredentials, error) {
+	uc := auth.UserCredentials{}
+
+	query := "SELECT id, email, password FROM main.users WHERE email = :email"
+	row := ur.db.QueryRowContext(ctx, query, email)
+	err := row.Scan(&uc.ID, &uc.Email, &uc.HashedPassword)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, auth.ErrCredentialsNotFound
+		}
+	}
+
+	return &uc, nil
 }
