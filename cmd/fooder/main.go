@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -22,15 +21,8 @@ func main() {
 	shutdownChan := make(chan os.Signal, 1)
 	signal.Notify(shutdownChan, syscall.SIGKILL, syscall.SIGTERM)
 
-	logHandlerOpts := &slog.HandlerOptions{
-		Level: slog.LevelDebug,
-	}
-	logHandler := slog.NewJSONHandler(os.Stdout, logHandlerOpts)
-	logger := slog.New(logHandler)
-	slog.SetDefault(logger)
-
 	// init env wrapper
-	log.Println("Initializing envs...")
+	fmt.Println("Initializing envs...")
 	envs, err := env.NewEnv()
 	if err != nil {
 		log.Fatal(err)

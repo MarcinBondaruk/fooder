@@ -2,6 +2,8 @@ package di
 
 import (
 	"database/sql"
+	"log/slog"
+	"os"
 	"time"
 
 	"github.com/MarcinBondaruk/fooder/internal/auth"
@@ -33,6 +35,12 @@ type Container struct {
 }
 
 func NewContainer(envs *env.Env) (*Container, error) {
+	logHandlerOpts := &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+	}
+	logHandler := slog.NewJSONHandler(os.Stdout, logHandlerOpts)
+	logger := slog.New(logHandler)
+
 	db, err := database.NewSqlite(envs.SqliteDSN())
 	if err != nil {
 		return nil, err
@@ -47,7 +55,7 @@ func NewContainer(envs *env.Env) (*Container, error) {
 	tokenRepository := auth.NewInMemoryTokenRepository(tokenStorage)
 	userRepository := sqlite.NewUserRepository(db)
 
-	authSvc := auth.NewService(userRepository, tokenRepository, loginLimiter)
+	authSvc := auth.NewService(userRepository, tokenRepository, loginLimiter, logger)
 
 	userService := user.NewService(userRepository)
 

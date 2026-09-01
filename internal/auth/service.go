@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	"log/slog"
 
 	"github.com/MarcinBondaruk/fooder/internal/auth/login_limiter"
 )
@@ -13,13 +14,15 @@ type Service struct {
 	credentialsRepo CredentialsRepository
 	tokenRepo       TokenRepository
 	loginLimiter    *login_limiter.LoginLimiter
+	logger          *slog.Logger
 }
 
-func NewService(credentialsRepo CredentialsRepository, tokenRepo TokenRepository, loginLimiter *login_limiter.LoginLimiter) *Service {
+func NewService(credentialsRepo CredentialsRepository, tokenRepo TokenRepository, loginLimiter *login_limiter.LoginLimiter, logger *slog.Logger) *Service {
 	return &Service{
 		credentialsRepo,
 		tokenRepo,
 		loginLimiter,
+		logger,
 	}
 }
 
