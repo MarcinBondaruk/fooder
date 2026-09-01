@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -25,15 +24,17 @@ func main() {
 	fmt.Println("Initializing envs...")
 	envs, err := env.NewEnv()
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
+		return
 	}
 
 	c, err := di.NewContainer(envs)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
+		return
 	}
 
-	log.Println("Initializing router...")
+	fmt.Println("Initializing router...")
 	r := router.NewRouter(envs, c)
 
 	s := &http.Server{
@@ -47,13 +48,13 @@ func main() {
 	}
 
 	go func() {
-		log.Println("Starting http server on port 8080")
+		fmt.Println("Starting http server on port 8080")
 		err = s.ListenAndServe()
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Fatal(err)
+			fmt.Println(err)
 		}
 
-		log.Println("server is shutting down")
+		fmt.Println("server is shutting down")
 	}()
 
 	<-shutdownChan
@@ -62,13 +63,15 @@ func main() {
 
 	err = s.Shutdown(ctx)
 	if err != nil {
-		log.Printf("error during shutdown: %v", err)
+		fmt.Println("error during shutdown: %v", err)
+		return
 	}
 
 	err = c.TearDown()
 	if err != nil {
-		log.Printf("error during container shutdown: %v", err)
+		fmt.Println("error during container shutdown: %v", err)
+		return
 	}
 
-	log.Println("server shutdown")
+	fmt.Println("server shutdown")
 }
