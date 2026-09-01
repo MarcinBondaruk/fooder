@@ -47,7 +47,7 @@ func NewContainer(envs *env.Env) (*Container, error) {
 	tokenRepository := auth.NewInMemoryTokenRepository(tokenStorage)
 	userRepository := sqlite.NewUserRepository(db)
 
-	authSvc := auth.NewService(userRepository, tokenRepository)
+	authSvc := auth.NewService(userRepository, tokenRepository, loginLimiter)
 
 	userService := user.NewService(userRepository)
 

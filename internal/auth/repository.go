@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"errors"
 )
 
 type TokenRepository interface {
@@ -14,5 +13,3 @@ type TokenRepository interface {
 type CredentialsRepository interface {
 	GetCredentialsByEmail(ctx context.Context, email string) (*UserCredentials, error)
 }
-
-var ErrCredentialsNotFound = errors.New("user credentials not found")
