@@ -3,6 +3,7 @@ package router
 import (
 	"net/http"
 
+	"github.com/MarcinBondaruk/fooder/internal/api"
 	"github.com/MarcinBondaruk/fooder/internal/auth"
 	"github.com/MarcinBondaruk/fooder/internal/cooking_list"
 	"github.com/MarcinBondaruk/fooder/internal/framework/di"
@@ -29,6 +30,10 @@ func NewRouter(envs *env.Env, c *di.Container) http.Handler {
 	m.Handle("GET /api/v1/cooking-lists/{id}", middleware.Chain(cooking_list.ViewCookingListHandler(c.CookingListService())))
 
 	m.Handle("GET /api/v1/cooking-lists/{id}/shopping-list", middleware.Chain(cooking_list.GenerateShoppingListHandler(c.CookingListService())))
+
+	m.Handle("GET /openapi.yaml", middleware.Chain(api.RawApiHandler()))
+
+	m.Handle("GET /docs/api", middleware.Chain(api.SwaggerApiHandler()))
 
 	// PUBLIC UI
 	m.Handle("GET /", http.RedirectHandler("/home", http.StatusFound))

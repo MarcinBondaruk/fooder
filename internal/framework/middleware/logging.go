@@ -39,7 +39,7 @@ func LoggingMiddleware(logger *slog.Logger) Middleware {
 			}
 			start := time.Now()
 			next.ServeHTTP(cr, r)
-			logger.Info("%s %s %d served in %v", r.Method, r.URL, cr.statusCode, time.Since(start))
+			logger.Info("request served", "method", r.Method, "url", r.URL.String(), "status_code", cr.statusCode, "duration", time.Since(start))
 		})
 	}
 }

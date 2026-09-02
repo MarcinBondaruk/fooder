@@ -1,0 +1,61 @@
+openapi: 3.0.4
+info:
+  title: 'Meals API'
+  description: 'API for family meals management'
+  contact:
+    email: 'benditdev90@gmail.com'
+    name: 'Owner'
+  version: '1.0.0'
+servers:
+  - url: 'http://localhost:3000'
+  - url: 'https://fooder.bendit.dev'
+tags:
+  - name: 'recipe'
+paths:
+  /meals/recipes:
+    get:
+      description: 'Returns a collection of recipes'
+      operationId: 'getRecipes'
+      tags: ['recipe']
+      responses:
+        '200':
+          description: 'A collection of recipes'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/recipe'
+  /meals/planner:
+  /meals/groceries:
+components:
+  schemas:
+    ingredient:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+    recipeIngredient:
+      type: object
+      properties:
+        ingredientId:
+          type: string
+        name:
+          type: string
+    recipe:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/ingredient'
+        description:
+          type: string
+    
+

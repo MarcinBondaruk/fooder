@@ -1,3 +1,4 @@
+// Package in_memory_db mplements token repository as in memory map
 package in_memory_db
 
 import (
