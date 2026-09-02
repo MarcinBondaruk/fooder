@@ -11,6 +11,7 @@ import (
 	"github.com/MarcinBondaruk/fooder/internal/cooking_list"
 	"github.com/MarcinBondaruk/fooder/internal/framework/database"
 	"github.com/MarcinBondaruk/fooder/internal/framework/env"
+	"github.com/MarcinBondaruk/fooder/internal/in_memory_db"
 	"github.com/MarcinBondaruk/fooder/internal/recipe"
 	"github.com/MarcinBondaruk/fooder/internal/sqlite"
 	"github.com/MarcinBondaruk/fooder/internal/user"
@@ -53,7 +54,7 @@ func NewContainer(envs *env.Env) (*Container, error) {
 
 	tokenStorage := make(map[string]struct{})
 
-	tokenRepository := auth.NewInMemoryTokenRepository(tokenStorage)
+	tokenRepository := in_memory_db.NewTokenRepository(tokenStorage)
 	userRepository := sqlite.NewUserRepository(db)
 
 	authSvc := auth.NewService(userRepository, tokenRepository, loginLimiter)
