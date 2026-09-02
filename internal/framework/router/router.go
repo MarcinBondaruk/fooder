@@ -46,7 +46,7 @@ func NewRouter(envs *env.Env, c *di.Container) http.Handler {
 
 	m.Handle("GET /admin/logout", middleware.Chain(auth.LogoutHandler(c.AuthService())))
 
-	m.Handle("POST /admin/login-submit", middleware.Chain(auth.LoginSubmitHandler(c.AuthService())))
+	m.Handle("POST /admin/login-submit", middleware.Chain(auth.LoginSubmitHandler(c.Logger(), c.AuthService())))
 
 	m.Handle("GET /admin/panel", middleware.Chain(ui.AdminPanelPage(), middleware.NewCookieBasedAuthorization(c.AuthService())))
 
@@ -54,5 +54,5 @@ func NewRouter(envs *env.Env, c *di.Container) http.Handler {
 
 	m.Handle("POST /admin/recipes/create", middleware.Chain(ui.HandleCreateRecipe(c.RecipeService()), middleware.NewCookieBasedAuthorization(c.AuthService())))
 
-	return middleware.Chain(m, middleware.PanicRecover(), middleware.LoggingMiddleware(), middleware.NewCorsMiddleware(envs.AllowedOrigins()))
+	return middleware.Chain(m, middleware.PanicRecover(), middleware.LoggingMiddleware(c.Logger()), middleware.NewCorsMiddleware(envs.AllowedOrigins()))
 }

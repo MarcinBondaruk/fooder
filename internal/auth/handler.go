@@ -2,14 +2,16 @@ package auth
 
 import (
 	"errors"
+	"log/slog"
 	"net"
 	"net/http"
 	"strings"
 )
 
-func LoginSubmitHandler(authSvc *Service) http.HandlerFunc {
+func LoginSubmitHandler(logger *slog.Logger, authSvc *Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseForm(); err != nil {
+			logger.Error("error while parsing form", "err", err)
 			http.Error(w, "invalid form", http.StatusBadRequest)
 			return
 		}
@@ -26,6 +28,7 @@ func LoginSubmitHandler(authSvc *Service) http.HandlerFunc {
 				return
 			}
 
+			logger.Error("error occured during login user", "err", err)
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}

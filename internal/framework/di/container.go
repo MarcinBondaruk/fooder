@@ -24,6 +24,7 @@ type Services struct {
 }
 
 type Utils struct {
+	logger       *slog.Logger
 	loginLimiter *login_limiter.LoginLimiter
 }
 
@@ -55,7 +56,7 @@ func NewContainer(envs *env.Env) (*Container, error) {
 	tokenRepository := auth.NewInMemoryTokenRepository(tokenStorage)
 	userRepository := sqlite.NewUserRepository(db)
 
-	authSvc := auth.NewService(userRepository, tokenRepository, loginLimiter, logger)
+	authSvc := auth.NewService(userRepository, tokenRepository, loginLimiter)
 
 	userService := user.NewService(userRepository)
 
@@ -75,6 +76,7 @@ func NewContainer(envs *env.Env) (*Container, error) {
 			userService:    userService,
 		},
 		utils: &Utils{
+			logger:       logger,
 			loginLimiter: loginLimiter,
 		},
 	}, nil
@@ -104,6 +106,10 @@ func (c *Container) UserService() *user.Service {
 
 func (c *Container) AuthService() *auth.Service {
 	return c.services.authService
+}
+
+func (c *Container) Logger() *slog.Logger {
+	return c.utils.logger
 }
 
 func (c *Container) LoginLimiter() *login_limiter.LoginLimiter {

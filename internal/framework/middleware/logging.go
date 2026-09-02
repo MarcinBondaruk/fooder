@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 	"time"
 )
@@ -30,7 +30,7 @@ func (cr *customResponse) Write(b []byte) (int, error) {
 	return cr.ResponseWriter.Write(b)
 }
 
-func LoggingMiddleware() Middleware {
+func LoggingMiddleware(logger *slog.Logger) Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			cr := &customResponse{
@@ -39,7 +39,7 @@ func LoggingMiddleware() Middleware {
 			}
 			start := time.Now()
 			next.ServeHTTP(cr, r)
-			log.Printf("%s %s %d served in %v", r.Method, r.URL, cr.statusCode, time.Since(start))
+			logger.Info("%s %s %d served in %v", r.Method, r.URL, cr.statusCode, time.Since(start))
 		})
 	}
 }
