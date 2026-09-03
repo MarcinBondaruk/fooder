@@ -130,7 +130,7 @@ components:
         ingredients:
           type: array
           items:
-            $ref: '#/components/schemas/ingredient'
+            $ref: '#/components/schemas/Ingredient'
         description:
           type: string
     ProblemJsonDetails:
@@ -142,17 +142,12 @@ components:
       properties:
         type:
           type: string
-          example: 'about:blank'
         title:
           type: string
-          example: 'Resource Not Found'
         status:
           type: integer
-          example: 404
         detail:
           type: string
-          example: 'recipe with ID 2137 not found'
         instance:
           type: string
-          example: '/recipes/2137'
 
