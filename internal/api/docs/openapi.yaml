@@ -106,21 +106,21 @@ components:
             $ref: '#/components/schemas/ProblemJsonDetails'
 
   schemas:
-    ingredient:
+    Ingredient:
       type: object
       properties:
         id:
           type: integer
         name:
           type: string
-    recipeIngredient:
+    RecipeIngredient:
       type: object
       properties:
         ingredientId:
           type: string
         name:
           type: string
-    recipe:
+    Recipe:
       type: object
       properties:
         id:
