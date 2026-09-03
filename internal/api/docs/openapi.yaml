@@ -24,7 +24,9 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/recipe'
+                  $ref: '#/components/schemas/Recipe'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     post:
       description: 'Creates new recipe'
       operationId: 'createRecipe'
@@ -32,12 +34,77 @@ paths:
       responses:
         '201':
           description: 'Recipe created'
+          headers:
+            Location:
+              descripton: location of newly created resource
+              schema:
+                type: string
+                example: '/recipes/1'
           content:
             application/json:
               schema:
-                type: object
-                $ref: '#/components/schemas/recipe'
+                $ref: '#/components/schemas/Recipe'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/NotAuthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /recipes/{id}:
+    get:
+      description: 'Returns a recipe resource'
+      operationId: 'getRecipeByID'
+      tags: ['recipe']
+      responses:
+        '200':
+          description: 'A recipe resource'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recipe'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 components:
+  responses:
+    BadRequest:
+      description: 'Invalid request payload or query params'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemJsonDetails'
+
+    NotAuthenticated:
+      description: 'User did not authenticate, login or valid api key required'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemJsonDetails'
+
+    Forbidden:
+      description: 'User is not authorized to perfom the operation'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemJsonDetails'
+
+    NotFound:
+      description: 'Requested resource was not found'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemJsonDetails'
+
+    InternalServerError:
+      description: 'Unexpected server error occurred'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemJsonDetails'
+
   schemas:
     ingredient:
       type: object
@@ -66,5 +133,26 @@ components:
             $ref: '#/components/schemas/ingredient'
         description:
           type: string
-    
+    ProblemJsonDetails:
+      type: object
+      required:
+        - type
+        - title
+        - status
+      properties:
+        type:
+          type: string
+          example: 'about:blank'
+        title:
+          type: string
+          example: 'Resource Not Found'
+        status:
+          type: integer
+          example: 404
+        detail:
+          type: string
+          example: 'recipe with ID 2137 not found'
+        instance:
+          type: string
+          example: '/recipes/2137'
 
