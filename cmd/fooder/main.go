@@ -63,13 +63,13 @@ func main() {
 
 	err = s.Shutdown(ctx)
 	if err != nil {
-		fmt.Println("error during shutdown: %v", err)
+		fmt.Println("error during shutdown: ", err)
 		return
 	}
 
 	err = c.TearDown()
 	if err != nil {
-		fmt.Println("error during container shutdown: %v", err)
+		fmt.Println("error during container shutdown: ", err)
 		return
 	}
 

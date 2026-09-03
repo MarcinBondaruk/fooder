@@ -7,12 +7,11 @@ info:
     name: 'Owner'
   version: '1.0.0'
 servers:
-  - url: 'http://localhost:3000'
-  - url: 'https://fooder.bendit.dev'
+  - url: 'https://fooder.bendit.dev/api/v1'
 tags:
   - name: 'recipe'
 paths:
-  /meals/recipes:
+  /recipes:
     get:
       description: 'Returns a collection of recipes'
       operationId: 'getRecipes'
@@ -26,8 +25,18 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/recipe'
-  /meals/planner:
-  /meals/groceries:
+    post:
+      description: 'Creates new recipe'
+      operationId: 'createRecipe'
+      tags: ['recipe']
+      responses:
+        '201':
+          description: 'Recipe created'
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/recipe'
 components:
   schemas:
     ingredient:

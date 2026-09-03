@@ -40,7 +40,6 @@ func (r *SqliteRepository) createRecipe(ctx context.Context, recipe Recipe) (int
 		recipe.description,
 		serializedIngredients,
 	)
-
 	if err != nil {
 		return 0, errors.New("failed to insert recipe into database: " + err.Error())
 	}
@@ -85,14 +84,13 @@ func (r *SqliteRepository) getRecipesByIds(ctx context.Context, ids []int) ([]Re
 		"SELECT id, name, description, ingredients FROM main.recipes WHERE id IN (:recipeIds)",
 		serializeRecipeIds(ids),
 	)
-
 	if err != nil {
 		log.Fatalf("Failed to get recipes: %v", err)
 	}
 	defer func() {
 		err := rows.Close()
 		if err != nil {
-			slog.Error("error on rows close", err)
+			slog.Error("error on rows close", "err", err)
 		}
 	}()
 
@@ -124,7 +122,7 @@ func (r *SqliteRepository) findAllRecipes(ctx context.Context) []Recipe {
 	defer func() {
 		err := rows.Close()
 		if err != nil {
-			slog.Error("error on rows close", err)
+			slog.Error("error on rows close", "err", err)
 		}
 	}()
 
