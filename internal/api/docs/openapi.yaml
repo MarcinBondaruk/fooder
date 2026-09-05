@@ -36,7 +36,7 @@ paths:
           description: 'Recipe created'
           headers:
             Location:
-              descripton: location of newly created resource
+              description: location of newly created resource
               schema:
                 type: string
                 example: '/recipes/1'
@@ -133,6 +133,21 @@ components:
             $ref: '#/components/schemas/Ingredient'
         description:
           type: string
+    RecipeCreate:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ingredient'
+      required:
+        - title
+        - description
+        - ingredients
     ProblemJsonDetails:
       type: object
       required:
@@ -142,6 +157,7 @@ components:
       properties:
         type:
           type: string
+          format: uri
         title:
           type: string
         status:
@@ -150,4 +166,5 @@ components:
           type: string
         instance:
           type: string
+          format: uri
 
