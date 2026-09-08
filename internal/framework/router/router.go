@@ -49,9 +49,9 @@ func NewRouter(envs *env.Env, c *di.Container) http.Handler {
 	// ADMIN UI
 	m.Handle("GET /admin/login", middleware.Chain(ui.AdminLoginPage()))
 
-	m.Handle("GET /admin/logout", middleware.Chain(auth.LogoutHandler(c.AuthService())))
+	m.Handle("GET /admin/logout", middleware.Chain(api.LogoutHandler(c.AuthService())))
 
-	m.Handle("POST /admin/login-submit", middleware.Chain(auth.LoginSubmitHandler(c.Logger(), c.AuthService())))
+	m.Handle("POST /admin/login-submit", middleware.Chain(api.LoginSubmitHandler(c.Logger(), c.AuthService())))
 
 	m.Handle("GET /admin/panel", middleware.Chain(ui.AdminPanelPage(), middleware.NewCookieBasedAuthorization(c.AuthService())))
 

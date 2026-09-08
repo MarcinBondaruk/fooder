@@ -1,4 +1,4 @@
-package auth
+package api
 
 import (
 	"errors"
@@ -6,9 +6,11 @@ import (
 	"net"
 	"net/http"
 	"strings"
+
+	"github.com/MarcinBondaruk/fooder/internal/auth"
 )
 
-func LoginSubmitHandler(logger *slog.Logger, authSvc *Service) http.HandlerFunc {
+func LoginSubmitHandler(logger *slog.Logger, authSvc *auth.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseForm(); err != nil {
 			logger.Error("error while parsing form", "err", err)
@@ -23,7 +25,7 @@ func LoginSubmitHandler(logger *slog.Logger, authSvc *Service) http.HandlerFunc 
 
 		token, err := authSvc.LoginUserWithIPLimit(r.Context(), ip, email, password)
 		if err != nil {
-			if errors.Is(err, ErrTooManyAttempts) {
+			if errors.Is(err, auth.ErrTooManyAttempts) {
 				http.Error(w, "too many attempts", http.StatusTooManyRequests)
 				return
 			}
@@ -47,7 +49,7 @@ func LoginSubmitHandler(logger *slog.Logger, authSvc *Service) http.HandlerFunc 
 	}
 }
 
-func LogoutHandler(authSvc *Service) http.HandlerFunc {
+func LogoutHandler(authSvc *auth.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c, _ := r.Cookie("auth_token")
 		authSvc.LogoutUser(r.Context(), c.Value)
