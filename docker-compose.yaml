@@ -13,6 +13,7 @@ services:
     volumes:
       - ./fooder.db:/app/fooder.db
       - ./public:/app/public
+      - ./api/openapi:/app/api/openapi
 
   fooder-db:
     image: postgres:15.10-alpine3.21

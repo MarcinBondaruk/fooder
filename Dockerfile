@@ -29,6 +29,7 @@ WORKDIR /app
 COPY --from=build /app/fooder .
 COPY --from=build /app/fooder-cli .
 COPY ./public /app/public/
+COPY ./api/openapi /app/api/openapi/
 
 EXPOSE 8080
 CMD ["./fooder"]

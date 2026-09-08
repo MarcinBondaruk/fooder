@@ -1,12 +1,8 @@
 package api
 
 import (
-	_ "embed"
 	"net/http"
 )
-
-//go:embed docs/openapi.yaml
-var openapi []byte
 
 const SwaggerApiHTML = `<!DOCTYPE html>
 <html lang="en">
@@ -34,7 +30,7 @@ const SwaggerApiHTML = `<!DOCTYPE html>
 func RawApiHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/yaml")
-		w.Write(openapi)
+		http.ServeFile(w, r, "api/openapi/openapi.yaml")
 	})
 }
 
