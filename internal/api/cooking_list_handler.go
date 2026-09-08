@@ -2,7 +2,9 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -30,7 +32,7 @@ type ShoppingListResponse struct {
 	ShoppingList map[string]int `json:"shoppingList"`
 }
 
-func CreateCookingListHandler(clSvc *cooking_list.Service) http.HandlerFunc {
+func CreateCookingListHandler(logger *slog.Logger, clSvc *cooking_list.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req CreateCookingListRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -47,6 +49,7 @@ func CreateCookingListHandler(clSvc *cooking_list.Service) http.HandlerFunc {
 
 		id, err := clSvc.CreateCookingList(r.Context(), req.RecipeID)
 		if err != nil {
+			logger.Error("failed to create cooking list", "err", err)
 			w.Header().Set("Content-Type", "application/problem+json")
 			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(ProblemJson{
@@ -62,7 +65,7 @@ func CreateCookingListHandler(clSvc *cooking_list.Service) http.HandlerFunc {
 	}
 }
 
-func ViewCookingListHandler(clSvc *cooking_list.Service) http.HandlerFunc {
+func ViewCookingListHandler(logger *slog.Logger, clSvc *cooking_list.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
@@ -79,13 +82,24 @@ func ViewCookingListHandler(clSvc *cooking_list.Service) http.HandlerFunc {
 
 		cl, err := clSvc.ViewCookingList(r.Context(), id)
 		if err != nil {
+			if errors.Is(err, cooking_list.ErrCookingListNotFound) {
+				w.Header().Set("Content-Type", "application/problem+json")
+				w.WriteHeader(http.StatusNotFound)
+				json.NewEncoder(w).Encode(ProblemJson{
+					Type:   "about:blank",
+					Title:  "Not Found",
+					Status: http.StatusNotFound,
+					Detail: "Cooking list not found",
+				})
+				return
+			}
+			logger.Error("failed to get cooking list", "err", err)
 			w.Header().Set("Content-Type", "application/problem+json")
-			w.WriteHeader(http.StatusNotFound)
+			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(ProblemJson{
 				Type:   "about:blank",
-				Title:  "Not Found",
-				Status: http.StatusNotFound,
-				Detail: "Cooking list not found",
+				Title:  "Internal Server Error",
+				Status: http.StatusInternalServerError,
 			})
 			return
 		}
@@ -105,7 +119,7 @@ func ViewCookingListHandler(clSvc *cooking_list.Service) http.HandlerFunc {
 	}
 }
 
-func AddRecipeToCookingListHandler(clSvc *cooking_list.Service) http.HandlerFunc {
+func AddRecipeToCookingListHandler(logger *slog.Logger, clSvc *cooking_list.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
@@ -135,6 +149,7 @@ func AddRecipeToCookingListHandler(clSvc *cooking_list.Service) http.HandlerFunc
 
 		err = clSvc.AddRecipeToCookingList(r.Context(), id, req.RecipeID)
 		if err != nil {
+			logger.Error("failed to add recipe to cooking list", "err", err)
 			w.Header().Set("Content-Type", "application/problem+json")
 			w.WriteHeader(http.StatusConflict)
 			json.NewEncoder(w).Encode(ProblemJson{
@@ -150,7 +165,7 @@ func AddRecipeToCookingListHandler(clSvc *cooking_list.Service) http.HandlerFunc
 	}
 }
 
-func GenerateShoppingListHandler(clSvc *cooking_list.Service) http.HandlerFunc {
+func GenerateShoppingListHandler(logger *slog.Logger, clSvc *cooking_list.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
@@ -167,6 +182,7 @@ func GenerateShoppingListHandler(clSvc *cooking_list.Service) http.HandlerFunc {
 
 		shoppingList, err := clSvc.GenerateShoppingList(r.Context(), id)
 		if err != nil {
+			logger.Error("failed to generate shopping list", "err", err)
 			w.Header().Set("Content-Type", "application/problem+json")
 			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(ProblemJson{

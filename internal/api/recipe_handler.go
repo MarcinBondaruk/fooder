@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -73,7 +74,7 @@ func CreateRecipeHandler(logger *slog.Logger, recipeSvc *recipe.Service) http.Ha
 	}
 }
 
-func ViewRecipeHandler(recipeSvc *recipe.Service) http.HandlerFunc {
+func ViewRecipeHandler(logger *slog.Logger, recipeSvc *recipe.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
@@ -90,13 +91,24 @@ func ViewRecipeHandler(recipeSvc *recipe.Service) http.HandlerFunc {
 
 		rcp, err := recipeSvc.GetRecipe(r.Context(), id)
 		if err != nil {
+			if errors.Is(err, recipe.ErrRecipeNotFound) {
+				w.Header().Set("Content-Type", "application/problem+json")
+				w.WriteHeader(http.StatusNotFound)
+				json.NewEncoder(w).Encode(ProblemJson{
+					Type:   "about:blank",
+					Title:  "Not Found",
+					Status: http.StatusNotFound,
+					Detail: "Recipe not found",
+				})
+				return
+			}
+			logger.Error("failed to get recipe", "err", err)
 			w.Header().Set("Content-Type", "application/problem+json")
-			w.WriteHeader(http.StatusNotFound)
+			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(ProblemJson{
 				Type:   "about:blank",
-				Title:  "Not Found",
-				Status: http.StatusNotFound,
-				Detail: "Recipe not found",
+				Title:  "Internal Server Error",
+				Status: http.StatusInternalServerError,
 			})
 			return
 		}
@@ -106,9 +118,20 @@ func ViewRecipeHandler(recipeSvc *recipe.Service) http.HandlerFunc {
 	}
 }
 
-func ListRecipesHandler(recipeSvc *recipe.Service) http.HandlerFunc {
+func ListRecipesHandler(logger *slog.Logger, recipeSvc *recipe.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		rcps := recipeSvc.FindAllRecipes(r.Context())
+		rcps, err := recipeSvc.FindAllRecipes(r.Context())
+		if err != nil {
+			logger.Error("failed to list recipes", "err", err)
+			w.Header().Set("Content-Type", "application/problem+json")
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(ProblemJson{
+				Type:   "about:blank",
+				Title:  "Internal Server Error",
+				Status: http.StatusInternalServerError,
+			})
+			return
+		}
 
 		response := make([]RecipeResponse, len(rcps))
 		for i, rcp := range rcps {

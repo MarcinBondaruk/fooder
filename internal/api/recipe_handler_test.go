@@ -18,7 +18,7 @@ type fakeRecipeRepo struct {
 	createRecipeFn    func(ctx context.Context, r recipe.Recipe) (int, error)
 	getRecipeFn       func(ctx context.Context, id int) (recipe.Recipe, error)
 	getRecipesByIdsFn func(ctx context.Context, ids []int) ([]recipe.Recipe, error)
-	findAllRecipesFn  func(ctx context.Context) []recipe.Recipe
+	findAllRecipesFn  func(ctx context.Context) ([]recipe.Recipe, error)
 }
 
 func (f *fakeRecipeRepo) CreateRecipe(ctx context.Context, r recipe.Recipe) (int, error) {
@@ -33,7 +33,7 @@ func (f *fakeRecipeRepo) GetRecipesByIds(ctx context.Context, ids []int) ([]reci
 	return f.getRecipesByIdsFn(ctx, ids)
 }
 
-func (f *fakeRecipeRepo) FindAllRecipes(ctx context.Context) []recipe.Recipe {
+func (f *fakeRecipeRepo) FindAllRecipes(ctx context.Context) ([]recipe.Recipe, error) {
 	return f.findAllRecipesFn(ctx)
 }
 
@@ -170,7 +170,7 @@ func TestViewRecipeHandler(t *testing.T) {
 			name:   "recipe not found",
 			pathID: "999",
 			getRecipe: func(_ context.Context, _ int) (recipe.Recipe, error) {
-				return recipe.Recipe{}, errors.New("not found")
+				return recipe.Recipe{}, recipe.ErrRecipeNotFound
 			},
 			wantStatus: http.StatusNotFound,
 		},
@@ -192,7 +192,7 @@ func TestViewRecipeHandler(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := &fakeRecipeRepo{getRecipeFn: tt.getRecipe}
 			svc := recipe.NewService(repo)
-			handler := ViewRecipeHandler(svc)
+			handler := ViewRecipeHandler(newDiscardLogger(), svc)
 
 			req := httptest.NewRequest(http.MethodGet, "/api/v1/recipes/"+tt.pathID, nil)
 			req.SetPathValue("id", tt.pathID)
@@ -257,12 +257,12 @@ func TestListRecipesHandler(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := &fakeRecipeRepo{
-				findAllRecipesFn: func(_ context.Context) []recipe.Recipe {
-					return tt.recipes
+				findAllRecipesFn: func(_ context.Context) ([]recipe.Recipe, error) {
+					return tt.recipes, nil
 				},
 			}
 			svc := recipe.NewService(repo)
-			handler := ListRecipesHandler(svc)
+			handler := ListRecipesHandler(newDiscardLogger(), svc)
 
 			req := httptest.NewRequest(http.MethodGet, "/api/v1/recipes", nil)
 			rec := httptest.NewRecorder()

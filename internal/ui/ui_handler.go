@@ -17,7 +17,12 @@ var templates = template.Must(template.ParseFS(templateFS, "templates/*.html", "
 
 func HomePageHandler(recipeSvc *recipe.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		rcps := recipeSvc.FindAllRecipes(r.Context())
+		rcps, err := recipeSvc.FindAllRecipes(r.Context())
+		if err != nil {
+			slog.Error("failed to load recipes", "error", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
 		recipes := make([]RecipeViewModel, len(rcps))
 
 		for i, rcp := range rcps {
@@ -34,7 +39,7 @@ func HomePageHandler(recipeSvc *recipe.Service) http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		err := templates.ExecuteTemplate(w, "home", viewModel)
+		err = templates.ExecuteTemplate(w, "home", viewModel)
 		if err != nil {
 			slog.Error("error parsing template", "error", err)
 		}

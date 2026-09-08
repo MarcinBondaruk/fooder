@@ -4,8 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"log"
-	"log/slog"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -16,7 +15,7 @@ type RecipeRepository struct {
 	db *sql.DB
 }
 
-func NewRecipeRepository(db *sql.DB) *RecipeRepository {
+func NewRecipeRepository(db *sql.DB) (*RecipeRepository, error) {
 	query := `
 	CREATE TABLE IF NOT EXISTS recipes (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -25,12 +24,12 @@ func NewRecipeRepository(db *sql.DB) *RecipeRepository {
 		ingredients TEXT NOT NULL
 	)`
 	if _, err := db.Exec(query); err != nil {
-		log.Fatalf("Failed to create recipes table: %v", err)
+		return nil, fmt.Errorf("failed to create recipes table: %w", err)
 	}
 
 	return &RecipeRepository{
 		db: db,
-	}
+	}, nil
 }
 
 func (r *RecipeRepository) CreateRecipe(ctx context.Context, rcp recipe.Recipe) (int, error) {
@@ -43,12 +42,12 @@ func (r *RecipeRepository) CreateRecipe(ctx context.Context, rcp recipe.Recipe) 
 		serializedIngredients,
 	)
 	if err != nil {
-		return 0, errors.New("failed to insert recipe into database: " + err.Error())
+		return 0, fmt.Errorf("failed to insert recipe: %w", err)
 	}
 
 	id, err := result.LastInsertId()
 	if err != nil {
-		return 0, errors.New("failed to retrieve recipe id: " + err.Error())
+		return 0, fmt.Errorf("failed to retrieve recipe id: %w", err)
 	}
 
 	return int(id), nil
@@ -63,9 +62,9 @@ func (r *RecipeRepository) GetRecipe(ctx context.Context, id int) (recipe.Recipe
 	err := row.Scan(&recipeID, &name, &description, &ingredients)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return recipe.Recipe{}, nil
+			return recipe.Recipe{}, recipe.ErrRecipeNotFound
 		}
-		log.Fatalf("Failed to find recipe by id: %v", err)
+		return recipe.Recipe{}, fmt.Errorf("failed to get recipe: %w", err)
 	}
 
 	return recipe.Recipe{
@@ -87,14 +86,9 @@ func (r *RecipeRepository) GetRecipesByIds(ctx context.Context, ids []int) ([]re
 		serializeRecipeIds(ids),
 	)
 	if err != nil {
-		log.Fatalf("Failed to get recipes: %v", err)
+		return nil, fmt.Errorf("failed to query recipes: %w", err)
 	}
-	defer func() {
-		err := rows.Close()
-		if err != nil {
-			slog.Error("error on rows close", "err", err)
-		}
-	}()
+	defer rows.Close()
 
 	var recipes []recipe.Recipe
 	for rows.Next() {
@@ -102,7 +96,7 @@ func (r *RecipeRepository) GetRecipesByIds(ctx context.Context, ids []int) ([]re
 		var name, description, ingredients string
 		err := rows.Scan(&recipeID, &name, &description, &ingredients)
 		if err != nil {
-			return nil, errors.New("failed to scan recipes: " + err.Error())
+			return nil, fmt.Errorf("failed to scan recipe: %w", err)
 		}
 
 		recipes = append(recipes, recipe.Recipe{
@@ -116,17 +110,12 @@ func (r *RecipeRepository) GetRecipesByIds(ctx context.Context, ids []int) ([]re
 	return recipes, nil
 }
 
-func (r *RecipeRepository) FindAllRecipes(ctx context.Context) []recipe.Recipe {
+func (r *RecipeRepository) FindAllRecipes(ctx context.Context) ([]recipe.Recipe, error) {
 	rows, err := r.db.QueryContext(ctx, "SELECT id, name, description, ingredients FROM main.recipes")
 	if err != nil {
-		log.Fatalf("Failed to get recipes: %v", err)
+		return nil, fmt.Errorf("failed to query recipes: %w", err)
 	}
-	defer func() {
-		err := rows.Close()
-		if err != nil {
-			slog.Error("error on rows close", "err", err)
-		}
-	}()
+	defer rows.Close()
 
 	var recipes []recipe.Recipe
 	for rows.Next() {
@@ -134,7 +123,7 @@ func (r *RecipeRepository) FindAllRecipes(ctx context.Context) []recipe.Recipe {
 		var name, description, ingredients string
 		err := rows.Scan(&recipeID, &name, &description, &ingredients)
 		if err != nil {
-			log.Fatalf("Failed to scan row: %v", err)
+			return nil, fmt.Errorf("failed to scan recipe: %w", err)
 		}
 
 		recipes = append(recipes, recipe.Recipe{
@@ -145,7 +134,7 @@ func (r *RecipeRepository) FindAllRecipes(ctx context.Context) []recipe.Recipe {
 		})
 	}
 
-	return recipes
+	return recipes, nil
 }
 
 func serializeRecipeIds(recipes []int) string {

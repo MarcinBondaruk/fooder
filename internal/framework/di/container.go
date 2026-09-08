@@ -55,16 +55,25 @@ func NewContainer(envs *env.Env) (*Container, error) {
 	tokenStorage := make(map[string]struct{})
 
 	tokenRepository := in_memory_db.NewTokenRepository(tokenStorage)
-	userRepository := sqlite.NewUserRepository(db)
+	userRepository, err := sqlite.NewUserRepository(db)
+	if err != nil {
+		return nil, err
+	}
 
 	authSvc := auth.NewService(userRepository, tokenRepository, loginLimiter)
 
 	userService := user.NewService(userRepository)
 
-	recipeRepository := sqlite.NewRecipeRepository(db)
+	recipeRepository, err := sqlite.NewRecipeRepository(db)
+	if err != nil {
+		return nil, err
+	}
 	recipeSvc := recipe.NewService(recipeRepository)
 
-	cookingListRepository := sqlite.NewCookingListRepository(db)
+	cookingListRepository, err := sqlite.NewCookingListRepository(db)
+	if err != nil {
+		return nil, err
+	}
 	clSvc := cooking_list.NewService(recipeSvc, cookingListRepository)
 
 	return &Container{

@@ -16,17 +16,17 @@ func NewRouter(envs *env.Env, c *di.Container) http.Handler {
 	// API
 	m.Handle("POST /api/v1/recipes", middleware.Chain(api.CreateRecipeHandler(c.Logger(), c.RecipeService()), middleware.NewApiKeyAuthorization(envs.ApiKey())))
 
-	m.Handle("GET /api/v1/recipes/{id}", middleware.Chain(api.ViewRecipeHandler(c.RecipeService())))
+	m.Handle("GET /api/v1/recipes/{id}", middleware.Chain(api.ViewRecipeHandler(c.Logger(), c.RecipeService())))
 
-	m.Handle("GET /api/v1/recipes", middleware.Chain(api.ListRecipesHandler(c.RecipeService())))
+	m.Handle("GET /api/v1/recipes", middleware.Chain(api.ListRecipesHandler(c.Logger(), c.RecipeService())))
 
-	m.Handle("POST /api/v1/cooking-lists", middleware.Chain(api.CreateCookingListHandler(c.CookingListService()), middleware.NewApiKeyAuthorization(envs.ApiKey())))
+	m.Handle("POST /api/v1/cooking-lists", middleware.Chain(api.CreateCookingListHandler(c.Logger(), c.CookingListService()), middleware.NewApiKeyAuthorization(envs.ApiKey())))
 
-	m.Handle("PATCH /api/v1/cooking-lists/{id}", middleware.Chain(api.AddRecipeToCookingListHandler(c.CookingListService()), middleware.NewApiKeyAuthorization(envs.ApiKey())))
+	m.Handle("PATCH /api/v1/cooking-lists/{id}", middleware.Chain(api.AddRecipeToCookingListHandler(c.Logger(), c.CookingListService()), middleware.NewApiKeyAuthorization(envs.ApiKey())))
 
-	m.Handle("GET /api/v1/cooking-lists/{id}", middleware.Chain(api.ViewCookingListHandler(c.CookingListService())))
+	m.Handle("GET /api/v1/cooking-lists/{id}", middleware.Chain(api.ViewCookingListHandler(c.Logger(), c.CookingListService())))
 
-	m.Handle("GET /api/v1/cooking-lists/{id}/shopping-list", middleware.Chain(api.GenerateShoppingListHandler(c.CookingListService())))
+	m.Handle("GET /api/v1/cooking-lists/{id}/shopping-list", middleware.Chain(api.GenerateShoppingListHandler(c.Logger(), c.CookingListService())))
 
 	m.Handle("GET /openapi.yaml", middleware.Chain(api.RawApiHandler()))
 

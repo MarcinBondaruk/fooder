@@ -39,6 +39,6 @@ func (s *Service) GetRecipesByIds(ctx context.Context, ids []int) ([]Recipe, err
 	return recipes, nil
 }
 
-func (s *Service) FindAllRecipes(ctx context.Context) []Recipe {
+func (s *Service) FindAllRecipes(ctx context.Context) ([]Recipe, error) {
 	return s.repository.FindAllRecipes(ctx)
 }

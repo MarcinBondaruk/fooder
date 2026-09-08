@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"log"
+	"fmt"
 
 	"github.com/MarcinBondaruk/fooder/internal/auth"
 	"github.com/MarcinBondaruk/fooder/internal/user"
@@ -14,7 +14,7 @@ type UserRepository struct {
 	db *sql.DB
 }
 
-func NewUserRepository(db *sql.DB) *UserRepository {
+func NewUserRepository(db *sql.DB) (*UserRepository, error) {
 	query := `
 	CREATE TABLE IF NOT EXISTS users (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -24,12 +24,12 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 	)`
 
 	if _, err := db.Exec(query); err != nil {
-		log.Fatalf("Failed to create users table: %v", err)
+		return nil, fmt.Errorf("failed to create users table: %w", err)
 	}
 
 	return &UserRepository{
 		db: db,
-	}
+	}, nil
 }
 
 func (r *UserRepository) AddUser(ctx context.Context, user user.User) (int, error) {
@@ -41,12 +41,12 @@ func (r *UserRepository) AddUser(ctx context.Context, user user.User) (int, erro
 		user.Password,
 	)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("failed to add user: %w", err)
 	}
 
 	id, err := result.LastInsertId()
 	if err != nil {
-		return 0, errors.New("failed to retrieve user id" + err.Error())
+		return 0, fmt.Errorf("failed to retrieve user id: %w", err)
 	}
 
 	return int(id), nil

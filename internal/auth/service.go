@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
-	"errors"
 
 	"github.com/MarcinBondaruk/fooder/internal/auth/login_limiter"
 )
@@ -26,14 +25,11 @@ func NewService(credentialsRepo CredentialsRepository, tokenRepo TokenRepository
 func (s *Service) LoginUser(ctx context.Context, email, password string) (string, error) {
 	creds, err := s.credentialsRepo.GetCredentialsByEmail(ctx, email)
 	if err != nil {
-		return "", errors.New("user not found")
+		return "", ErrUserNotFound
 	}
 
 	if password != creds.HashedPassword {
-		return "", errors.New("invalid credentials")
-	}
-	if err != nil {
-		return "", err
+		return "", ErrInvalidCredentials
 	}
 
 	b := make([]byte, 32) // 256-bit

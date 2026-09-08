@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"log"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -15,7 +15,7 @@ type CookingListRepository struct {
 	db *sql.DB
 }
 
-func NewCookingListRepository(db *sql.DB) *CookingListRepository {
+func NewCookingListRepository(db *sql.DB) (*CookingListRepository, error) {
 	query := `
 		CREATE TABLE IF NOT EXISTS cooking_list (
 		    id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -25,18 +25,18 @@ func NewCookingListRepository(db *sql.DB) *CookingListRepository {
 
 	_, err := db.Exec(query)
 	if err != nil {
-		log.Fatal("failed to initialize cooking list table", err)
+		return nil, fmt.Errorf("failed to create cooking_list table: %w", err)
 	}
 
 	return &CookingListRepository{
 		db: db,
-	}
+	}, nil
 }
 
 func (r *CookingListRepository) CreateCookingList(ctx context.Context, cl cooking_list.CookingList) (int, error) {
 	result, err := r.db.ExecContext(ctx, `INSERT INTO main.cooking_list (recipes) VALUES (:recipes)`, serializeCookingListRecipes(cl.Recipes))
 	if err != nil {
-		return 0, errors.New("failed to insert cooking list")
+		return 0, fmt.Errorf("failed to insert cooking list: %w", err)
 	}
 
 	id, _ := result.LastInsertId()
@@ -48,7 +48,7 @@ func (r *CookingListRepository) UpdateCookingList(ctx context.Context, cl cookin
 
 	_, err := r.db.ExecContext(ctx, "UPDATE main.cooking_list SET recipes = :recipes WHERE id = :id", serializedRecipes, cl.ID)
 	if err != nil {
-		return errors.New("failed to update a cooking list")
+		return fmt.Errorf("failed to update cooking list: %w", err)
 	}
 
 	return nil
@@ -62,10 +62,10 @@ func (r *CookingListRepository) GetCookingList(ctx context.Context, cookingListI
 	err := result.Scan(&cl.ID, &serializedRecipes)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return cooking_list.CookingList{}, errors.New("no cooking list found")
+			return cooking_list.CookingList{}, cooking_list.ErrCookingListNotFound
 		}
 
-		return cooking_list.CookingList{}, errors.New("failed to scan a cooking list")
+		return cooking_list.CookingList{}, fmt.Errorf("failed to scan cooking list: %w", err)
 	}
 
 	cl.Recipes = deserializeCookingListRecipes(serializedRecipes)
@@ -84,14 +84,14 @@ func serializeCookingListRecipes(recipes []int) string {
 
 func deserializeCookingListRecipes(serializedRecipes string) []int {
 	tmp := strings.Split(serializedRecipes, ",")
-	recipes := make([]int, len(tmp))
+	var recipes []int
 
-	for i, recipeID := range tmp {
-		recipeID, err := strconv.Atoi(recipeID)
+	for _, s := range tmp {
+		recipeID, err := strconv.Atoi(s)
 		if err != nil {
-			log.Println("failed to deserialize recipe id:", recipeID, err)
+			continue
 		}
-		recipes[i] = recipeID
+		recipes = append(recipes, recipeID)
 	}
 
 	return recipes
