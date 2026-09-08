@@ -4,12 +4,10 @@ import (
 	"net/http"
 
 	"github.com/MarcinBondaruk/fooder/internal/api"
-	"github.com/MarcinBondaruk/fooder/internal/auth"
 	"github.com/MarcinBondaruk/fooder/internal/cooking_list"
 	"github.com/MarcinBondaruk/fooder/internal/framework/di"
 	"github.com/MarcinBondaruk/fooder/internal/framework/env"
 	"github.com/MarcinBondaruk/fooder/internal/framework/middleware"
-	"github.com/MarcinBondaruk/fooder/internal/recipe"
 	"github.com/MarcinBondaruk/fooder/internal/ui"
 )
 
@@ -17,11 +15,11 @@ func NewRouter(envs *env.Env, c *di.Container) http.Handler {
 	m := http.NewServeMux()
 
 	// API
-	m.Handle("POST /api/v1/recipes", middleware.Chain(recipe.CreateRecipeHandler(c.RecipeService()), middleware.NewApiKeyAuthorization(envs.ApiKey())))
+	m.Handle("POST /api/v1/recipes", middleware.Chain(api.CreateRecipeHandler(c.Logger(), c.RecipeService()), middleware.NewApiKeyAuthorization(envs.ApiKey())))
 
-	m.Handle("GET /api/v1/recipes/{id}", middleware.Chain(recipe.ViewRecipeHandler(c.RecipeService())))
+	m.Handle("GET /api/v1/recipes/{id}", middleware.Chain(api.ViewRecipeHandler(c.RecipeService())))
 
-	m.Handle("GET /api/v1/recipes", middleware.Chain(recipe.ListRecipesHandler(c.RecipeService())))
+	m.Handle("GET /api/v1/recipes", middleware.Chain(api.ListRecipesHandler(c.RecipeService())))
 
 	m.Handle("POST /api/v1/cooking-lists", middleware.Chain(cooking_list.CreateCookingListHandler(c.CookingListService()), middleware.NewApiKeyAuthorization(envs.ApiKey())))
 

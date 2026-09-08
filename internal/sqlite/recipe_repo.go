@@ -1,4 +1,4 @@
-package recipe
+package sqlite
 
 import (
 	"context"
@@ -8,13 +8,15 @@ import (
 	"log/slog"
 	"strconv"
 	"strings"
+
+	"github.com/MarcinBondaruk/fooder/internal/recipe"
 )
 
-type SqliteRepository struct {
+type RecipeRepository struct {
 	db *sql.DB
 }
 
-func NewSqliteRepository(db *sql.DB) *SqliteRepository {
+func NewRecipeRepository(db *sql.DB) *RecipeRepository {
 	query := `
 	CREATE TABLE IF NOT EXISTS recipes (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -26,18 +28,18 @@ func NewSqliteRepository(db *sql.DB) *SqliteRepository {
 		log.Fatalf("Failed to create recipes table: %v", err)
 	}
 
-	return &SqliteRepository{
+	return &RecipeRepository{
 		db: db,
 	}
 }
 
-func (r *SqliteRepository) createRecipe(ctx context.Context, recipe Recipe) (int, error) {
-	serializedIngredients := strings.Join(recipe.ingredients, ",")
+func (r *RecipeRepository) CreateRecipe(ctx context.Context, rcp recipe.Recipe) (int, error) {
+	serializedIngredients := strings.Join(rcp.Ingredients, ",")
 	result, err := r.db.ExecContext(
 		ctx,
 		"INSERT INTO main.recipes (name, description, ingredients) VALUES (:name, :description, :ingredients)",
-		recipe.name,
-		recipe.description,
+		rcp.Title,
+		rcp.Description,
 		serializedIngredients,
 	)
 	if err != nil {
@@ -52,7 +54,7 @@ func (r *SqliteRepository) createRecipe(ctx context.Context, recipe Recipe) (int
 	return int(id), nil
 }
 
-func (r *SqliteRepository) getRecipe(ctx context.Context, id int) (Recipe, error) {
+func (r *RecipeRepository) GetRecipe(ctx context.Context, id int) (recipe.Recipe, error) {
 	query := `SELECT id, name, description, ingredients FROM main.recipes WHERE id = :id`
 	row := r.db.QueryRowContext(ctx, query, id)
 
@@ -61,22 +63,22 @@ func (r *SqliteRepository) getRecipe(ctx context.Context, id int) (Recipe, error
 	err := row.Scan(&recipeID, &name, &description, &ingredients)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return Recipe{}, nil
+			return recipe.Recipe{}, nil
 		}
 		log.Fatalf("Failed to find recipe by id: %v", err)
 	}
 
-	return Recipe{
-		recipeID,
-		name,
-		description,
-		strings.Split(ingredients, ","),
+	return recipe.Recipe{
+		ID:          recipeID,
+		Title:       name,
+		Description: description,
+		Ingredients: strings.Split(ingredients, ","),
 	}, nil
 }
 
-func (r *SqliteRepository) getRecipesByIds(ctx context.Context, ids []int) ([]Recipe, error) {
+func (r *RecipeRepository) GetRecipesByIds(ctx context.Context, ids []int) ([]recipe.Recipe, error) {
 	if len(ids) == 0 {
-		return []Recipe{}, nil
+		return []recipe.Recipe{}, nil
 	}
 
 	rows, err := r.db.QueryContext(
@@ -94,7 +96,7 @@ func (r *SqliteRepository) getRecipesByIds(ctx context.Context, ids []int) ([]Re
 		}
 	}()
 
-	var recipes []Recipe
+	var recipes []recipe.Recipe
 	for rows.Next() {
 		var recipeID int
 		var name, description, ingredients string
@@ -103,18 +105,18 @@ func (r *SqliteRepository) getRecipesByIds(ctx context.Context, ids []int) ([]Re
 			return nil, errors.New("failed to scan recipes: " + err.Error())
 		}
 
-		recipes = append(recipes, Recipe{
-			recipeID,
-			name,
-			description,
-			strings.Split(ingredients, ","),
+		recipes = append(recipes, recipe.Recipe{
+			ID:          recipeID,
+			Title:       name,
+			Description: description,
+			Ingredients: strings.Split(ingredients, ","),
 		})
 	}
 
 	return recipes, nil
 }
 
-func (r *SqliteRepository) findAllRecipes(ctx context.Context) []Recipe {
+func (r *RecipeRepository) FindAllRecipes(ctx context.Context) []recipe.Recipe {
 	rows, err := r.db.QueryContext(ctx, "SELECT id, name, description, ingredients FROM main.recipes")
 	if err != nil {
 		log.Fatalf("Failed to get recipes: %v", err)
@@ -126,7 +128,7 @@ func (r *SqliteRepository) findAllRecipes(ctx context.Context) []Recipe {
 		}
 	}()
 
-	var recipes []Recipe
+	var recipes []recipe.Recipe
 	for rows.Next() {
 		var recipeID int
 		var name, description, ingredients string
@@ -135,11 +137,11 @@ func (r *SqliteRepository) findAllRecipes(ctx context.Context) []Recipe {
 			log.Fatalf("Failed to scan row: %v", err)
 		}
 
-		recipes = append(recipes, Recipe{
-			recipeID,
-			name,
-			description,
-			strings.Split(ingredients, ","),
+		recipes = append(recipes, recipe.Recipe{
+			ID:          recipeID,
+			Title:       name,
+			Description: description,
+			Ingredients: strings.Split(ingredients, ","),
 		})
 	}
 

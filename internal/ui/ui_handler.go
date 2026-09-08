@@ -22,10 +22,10 @@ func HomePageHandler(recipeSvc *recipe.Service) http.HandlerFunc {
 
 		for i, rcp := range rcps {
 			recipes[i] = RecipeViewModel{
-				ID:          rcp.ID(),
-				Name:        rcp.Name(),
-				Description: rcp.Description(),
-				Ingredients: rcp.Ingredients(),
+				ID:          rcp.ID,
+				Name:        rcp.Title,
+				Description: rcp.Description,
+				Ingredients: rcp.Ingredients,
 			}
 		}
 
@@ -57,9 +57,9 @@ func RecipeDetailsPageHandler(recipeSvc *recipe.Service) http.HandlerFunc {
 
 		viewModel := RecipeViewModel{
 			ID:          id,
-			Name:        rcp.Name(),
-			Description: rcp.Description(),
-			Ingredients: rcp.Ingredients(),
+			Name:        rcp.Title,
+			Description: rcp.Description,
+			Ingredients: rcp.Ingredients,
 		}
 
 		w.WriteHeader(http.StatusOK)

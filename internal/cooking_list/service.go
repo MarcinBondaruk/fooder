@@ -66,7 +66,7 @@ func (s *Service) GenerateShoppingList(ctx context.Context, cookingListID int) (
 
 	reducedIngredients := make(map[string]int)
 	for _, r := range recipes {
-		for _, ingredient := range r.Ingredients() {
+		for _, ingredient := range r.Ingredients {
 			reducedIngredients[ingredient]++
 		}
 	}

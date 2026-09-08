@@ -1,32 +1,16 @@
 package recipe
 
 type Recipe struct {
-	id          int
-	name        string
-	description string
-	ingredients []string
+	ID          int
+	Title       string
+	Description string
+	Ingredients []string
 }
 
-func NewRecipe(name string, description string, ingredients []string) Recipe {
+func NewRecipe(title string, description string, ingredients []string) Recipe {
 	return Recipe{
-		name:        name,
-		description: description,
-		ingredients: ingredients,
+		Title:       title,
+		Description: description,
+		Ingredients: ingredients,
 	}
-}
-
-func (r *Recipe) ID() int {
-	return r.id
-}
-
-func (r *Recipe) Name() string {
-	return r.name
-}
-
-func (r *Recipe) Description() string {
-	return r.description
-}
-
-func (r *Recipe) Ingredients() []string {
-	return r.ingredients
 }

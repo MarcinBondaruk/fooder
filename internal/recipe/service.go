@@ -3,17 +3,17 @@ package recipe
 import "context"
 
 type Service struct {
-	repository Repository
+	repository RecipeRepository
 }
 
-func NewService(repository Repository) *Service {
+func NewService(repository RecipeRepository) *Service {
 	return &Service{
 		repository,
 	}
 }
 
 func (s *Service) CreateRecipe(ctx context.Context, recipe Recipe) (int, error) {
-	id, err := s.repository.createRecipe(ctx, recipe)
+	id, err := s.repository.CreateRecipe(ctx, recipe)
 	if err != nil {
 		return 0, err
 	}
@@ -22,8 +22,7 @@ func (s *Service) CreateRecipe(ctx context.Context, recipe Recipe) (int, error) 
 }
 
 func (s *Service) GetRecipe(ctx context.Context, id int) (Recipe, error) {
-	recipe, err := s.repository.getRecipe(ctx, id)
-
+	recipe, err := s.repository.GetRecipe(ctx, id)
 	if err != nil {
 		return Recipe{}, err
 	}
@@ -32,7 +31,7 @@ func (s *Service) GetRecipe(ctx context.Context, id int) (Recipe, error) {
 }
 
 func (s *Service) GetRecipesByIds(ctx context.Context, ids []int) ([]Recipe, error) {
-	recipes, err := s.repository.getRecipesByIds(ctx, ids)
+	recipes, err := s.repository.GetRecipesByIds(ctx, ids)
 	if err != nil {
 		return nil, err
 	}
@@ -41,5 +40,5 @@ func (s *Service) GetRecipesByIds(ctx context.Context, ids []int) ([]Recipe, err
 }
 
 func (s *Service) FindAllRecipes(ctx context.Context) []Recipe {
-	return s.repository.findAllRecipes(ctx)
+	return s.repository.FindAllRecipes(ctx)
 }
