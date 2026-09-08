@@ -64,7 +64,7 @@ func NewContainer(envs *env.Env) (*Container, error) {
 	recipeRepository := sqlite.NewRecipeRepository(db)
 	recipeSvc := recipe.NewService(recipeRepository)
 
-	cookingListRepository := cooking_list.NewSqliteRepository(db)
+	cookingListRepository := sqlite.NewCookingListRepository(db)
 	clSvc := cooking_list.NewService(recipeSvc, cookingListRepository)
 
 	return &Container{

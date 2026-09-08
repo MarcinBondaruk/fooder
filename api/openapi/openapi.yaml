@@ -10,6 +10,7 @@ servers:
   - url: 'https://fooder.bendit.dev/api/v1'
 tags:
   - name: 'recipe'
+  - name: 'cooking-list'
 paths:
   /recipes:
     get:
@@ -50,6 +51,113 @@ paths:
           $ref: '#/components/responses/NotAuthenticated'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /cooking-lists:
+    post:
+      description: 'Creates a new cooking list with an initial recipe'
+      operationId: 'createCookingList'
+      tags: ['cooking-list']
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCookingListRequest'
+      responses:
+        '201':
+          description: 'Cooking list created'
+          headers:
+            Location:
+              description: location of newly created resource
+              schema:
+                type: string
+                example: '/cooking-lists/1'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/NotAuthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /cooking-lists/{id}:
+    get:
+      description: 'Returns a cooking list resource'
+      operationId: 'getCookingListByID'
+      tags: ['cooking-list']
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 'A cooking list resource'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CookingListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    patch:
+      description: 'Adds a recipe to an existing cooking list'
+      operationId: 'addRecipeToCookingList'
+      tags: ['cooking-list']
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddRecipeToCookingListRequest'
+      responses:
+        '202':
+          description: 'Recipe added to cooking list'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/NotAuthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: 'Could not add recipe to cooking list'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemJsonDetails'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /cooking-lists/{id}/shopping-list:
+    get:
+      description: 'Generates a shopping list from a cooking list'
+      operationId: 'generateShoppingList'
+      tags: ['cooking-list']
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 'A shopping list generated from the cooking list'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /recipes/{id}:
@@ -148,6 +256,41 @@ components:
         - title
         - description
         - ingredients
+    CreateCookingListRequest:
+      type: object
+      properties:
+        recipeId:
+          type: integer
+      required:
+        - recipeId
+    AddRecipeToCookingListRequest:
+      type: object
+      properties:
+        recipeId:
+          type: integer
+      required:
+        - recipeId
+    CookingListItem:
+      type: object
+      properties:
+        recipeId:
+          type: integer
+    CookingListResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        recipes:
+          type: array
+          items:
+            $ref: '#/components/schemas/CookingListItem'
+    ShoppingListResponse:
+      type: object
+      properties:
+        shoppingList:
+          type: object
+          additionalProperties:
+            type: integer
     ProblemJsonDetails:
       type: object
       required:

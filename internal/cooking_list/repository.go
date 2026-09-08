@@ -2,8 +2,8 @@ package cooking_list
 
 import "context"
 
-type Repository interface {
-	createCookingList(ctx context.Context, cookingList CookingList) (int, error)
-	updateCookingList(ctx context.Context, cookingList CookingList) error
-	getCookingList(ctx context.Context, cookingListID int) (CookingList, error)
+type CookingListRepository interface {
+	CreateCookingList(ctx context.Context, cookingList CookingList) (int, error)
+	UpdateCookingList(ctx context.Context, cookingList CookingList) error
+	GetCookingList(ctx context.Context, cookingListID int) (CookingList, error)
 }

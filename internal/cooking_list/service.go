@@ -2,15 +2,16 @@ package cooking_list
 
 import (
 	"context"
+
 	"github.com/MarcinBondaruk/fooder/internal/recipe"
 )
 
 type Service struct {
 	recipeSvc  *recipe.Service
-	repository Repository
+	repository CookingListRepository
 }
 
-func NewService(recipeSvc *recipe.Service, repository Repository) *Service {
+func NewService(recipeSvc *recipe.Service, repository CookingListRepository) *Service {
 	return &Service{
 		recipeSvc,
 		repository,
@@ -18,9 +19,9 @@ func NewService(recipeSvc *recipe.Service, repository Repository) *Service {
 }
 
 func (s *Service) CreateCookingList(ctx context.Context, recipeID int) (int, error) {
-	cookingList := CookingList{recipes: []int{recipeID}}
+	cookingList := NewCookingList([]int{recipeID})
 
-	id, err := s.repository.createCookingList(ctx, cookingList)
+	id, err := s.repository.CreateCookingList(ctx, cookingList)
 	if err != nil {
 		return 0, err
 	}
@@ -29,14 +30,14 @@ func (s *Service) CreateCookingList(ctx context.Context, recipeID int) (int, err
 }
 
 func (s *Service) AddRecipeToCookingList(ctx context.Context, cookingListID, recipeID int) error {
-	cookingList, err := s.repository.getCookingList(ctx, cookingListID)
+	cookingList, err := s.repository.GetCookingList(ctx, cookingListID)
 	if err != nil {
 		return err
 	}
 
-	cookingList.addRecipe(recipeID)
+	cookingList.AddRecipe(recipeID)
 
-	err = s.repository.updateCookingList(ctx, cookingList)
+	err = s.repository.UpdateCookingList(ctx, cookingList)
 	if err != nil {
 		return err
 	}
@@ -45,7 +46,7 @@ func (s *Service) AddRecipeToCookingList(ctx context.Context, cookingListID, rec
 }
 
 func (s *Service) ViewCookingList(ctx context.Context, id int) (CookingList, error) {
-	cookingList, err := s.repository.getCookingList(ctx, id)
+	cookingList, err := s.repository.GetCookingList(ctx, id)
 	if err != nil {
 		return CookingList{}, err
 	}
@@ -54,12 +55,12 @@ func (s *Service) ViewCookingList(ctx context.Context, id int) (CookingList, err
 }
 
 func (s *Service) GenerateShoppingList(ctx context.Context, cookingListID int) (map[string]int, error) {
-	cookingList, err := s.repository.getCookingList(ctx, cookingListID)
+	cookingList, err := s.repository.GetCookingList(ctx, cookingListID)
 	if err != nil {
 		return nil, err
 	}
 
-	recipes, err := s.recipeSvc.GetRecipesByIds(ctx, cookingList.Recipes())
+	recipes, err := s.recipeSvc.GetRecipesByIds(ctx, cookingList.Recipes)
 	if err != nil {
 		return nil, err
 	}

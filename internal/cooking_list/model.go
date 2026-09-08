@@ -2,13 +2,15 @@ package cooking_list
 
 type CookingList struct {
 	ID      int
-	recipes []int
+	Recipes []int
 }
 
-func (cl *CookingList) Recipes() []int {
-	return cl.recipes
+func NewCookingList(recipes []int) CookingList {
+	return CookingList{
+		Recipes: recipes,
+	}
 }
 
-func (cl *CookingList) addRecipe(recipeID int) {
-	cl.recipes = append(cl.recipes, recipeID)
+func (cl *CookingList) AddRecipe(recipeID int) {
+	cl.Recipes = append(cl.Recipes, recipeID)
 }

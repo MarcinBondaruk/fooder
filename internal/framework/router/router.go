@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/MarcinBondaruk/fooder/internal/api"
-	"github.com/MarcinBondaruk/fooder/internal/cooking_list"
 	"github.com/MarcinBondaruk/fooder/internal/framework/di"
 	"github.com/MarcinBondaruk/fooder/internal/framework/env"
 	"github.com/MarcinBondaruk/fooder/internal/framework/middleware"
@@ -21,13 +20,13 @@ func NewRouter(envs *env.Env, c *di.Container) http.Handler {
 
 	m.Handle("GET /api/v1/recipes", middleware.Chain(api.ListRecipesHandler(c.RecipeService())))
 
-	m.Handle("POST /api/v1/cooking-lists", middleware.Chain(cooking_list.CreateCookingListHandler(c.CookingListService()), middleware.NewApiKeyAuthorization(envs.ApiKey())))
+	m.Handle("POST /api/v1/cooking-lists", middleware.Chain(api.CreateCookingListHandler(c.CookingListService()), middleware.NewApiKeyAuthorization(envs.ApiKey())))
 
-	m.Handle("PATCH /api/v1/cooking-lists/{id}", middleware.Chain(cooking_list.AddRecipeToCookingListHandler(c.CookingListService()), middleware.NewApiKeyAuthorization(envs.ApiKey())))
+	m.Handle("PATCH /api/v1/cooking-lists/{id}", middleware.Chain(api.AddRecipeToCookingListHandler(c.CookingListService()), middleware.NewApiKeyAuthorization(envs.ApiKey())))
 
-	m.Handle("GET /api/v1/cooking-lists/{id}", middleware.Chain(cooking_list.ViewCookingListHandler(c.CookingListService())))
+	m.Handle("GET /api/v1/cooking-lists/{id}", middleware.Chain(api.ViewCookingListHandler(c.CookingListService())))
 
-	m.Handle("GET /api/v1/cooking-lists/{id}/shopping-list", middleware.Chain(cooking_list.GenerateShoppingListHandler(c.CookingListService())))
+	m.Handle("GET /api/v1/cooking-lists/{id}/shopping-list", middleware.Chain(api.GenerateShoppingListHandler(c.CookingListService())))
 
 	m.Handle("GET /openapi.yaml", middleware.Chain(api.RawApiHandler()))
 
