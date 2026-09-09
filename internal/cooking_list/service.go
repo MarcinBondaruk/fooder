@@ -6,12 +6,16 @@ import (
 	"github.com/MarcinBondaruk/fooder/internal/recipe"
 )
 
+type RecipeService interface {
+	GetRecipesByIds(ctx context.Context, ids []int) ([]recipe.Recipe, error)
+}
+
 type Service struct {
-	recipeSvc  *recipe.Service
+	recipeSvc  RecipeService
 	repository CookingListRepository
 }
 
-func NewService(recipeSvc *recipe.Service, repository CookingListRepository) *Service {
+func NewService(recipeSvc RecipeService, repository CookingListRepository) *Service {
 	return &Service{
 		recipeSvc,
 		repository,
