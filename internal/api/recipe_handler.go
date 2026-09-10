@@ -25,7 +25,7 @@ type RecipeIngredientResponse struct {
 	Unit         string  `json:"unit"`
 }
 
-type RecipeCreate struct {
+type RecipeCreateRequest struct {
 	Title       string                    `json:"title"`
 	Description string                    `json:"description"`
 	Ingredients []RecipeIngredientRequest `json:"ingredients"`
@@ -40,16 +40,9 @@ type RecipeResponse struct {
 
 func CreateRecipeHandler(logger *slog.Logger, recipeSvc *recipe.Service, ingredientSvc *ingredient.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req RecipeCreate
+		var req RecipeCreateRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			w.Header().Set("Content-Type", "application/problem+json")
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(ProblemJson{
-				Type:   "about:blank",
-				Title:  "Bad Request",
-				Status: http.StatusBadRequest,
-				Detail: "Invalid request body",
-			})
+			writeProblem(w, http.StatusBadRequest, "Invalid request body")
 			return
 		}
 
@@ -57,38 +50,18 @@ func CreateRecipeHandler(logger *slog.Logger, recipeSvc *recipe.Service, ingredi
 		for i, ri := range req.Ingredients {
 			unit := ingredient.Unit(ri.Unit)
 			if !unit.Valid() {
-				w.Header().Set("Content-Type", "application/problem+json")
-				w.WriteHeader(http.StatusBadRequest)
-				json.NewEncoder(w).Encode(ProblemJson{
-					Type:   "about:blank",
-					Title:  "Bad Request",
-					Status: http.StatusBadRequest,
-					Detail: fmt.Sprintf("Invalid unit: %s", ri.Unit),
-				})
+				writeProblem(w, http.StatusBadRequest, fmt.Sprintf("Invalid unit: %s", ri.Unit))
 				return
 			}
 
 			ing, err := ingredientSvc.GetIngredient(r.Context(), ri.IngredientID)
 			if err != nil {
 				if errors.Is(err, ingredient.ErrIngredientNotFound) {
-					w.Header().Set("Content-Type", "application/problem+json")
-					w.WriteHeader(http.StatusBadRequest)
-					json.NewEncoder(w).Encode(ProblemJson{
-						Type:   "about:blank",
-						Title:  "Bad Request",
-						Status: http.StatusBadRequest,
-						Detail: fmt.Sprintf("Ingredient with id %d not found", ri.IngredientID),
-					})
+					writeProblem(w, http.StatusBadRequest, fmt.Sprintf("Ingredient with id %d not found", ri.IngredientID))
 					return
 				}
 				logger.Error("failed to get ingredient", "err", err)
-				w.Header().Set("Content-Type", "application/problem+json")
-				w.WriteHeader(http.StatusInternalServerError)
-				json.NewEncoder(w).Encode(ProblemJson{
-					Type:   "about:blank",
-					Title:  "Internal Server Error",
-					Status: http.StatusInternalServerError,
-				})
+				writeProblem(w, http.StatusInternalServerError, "")
 				return
 			}
 
@@ -103,13 +76,7 @@ func CreateRecipeHandler(logger *slog.Logger, recipeSvc *recipe.Service, ingredi
 		id, err := recipeSvc.CreateRecipe(r.Context(), recipe.NewRecipe(req.Title, req.Description, recipeIngredients))
 		if err != nil {
 			logger.Error("failed to create recipe", "err", err)
-			w.Header().Set("Content-Type", "application/problem+json")
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(ProblemJson{
-				Type:   "about:blank",
-				Title:  "Internal Server Error",
-				Status: http.StatusInternalServerError,
-			})
+			writeProblem(w, http.StatusInternalServerError, "")
 			return
 		}
 
@@ -129,38 +96,18 @@ func ViewRecipeHandler(logger *slog.Logger, recipeSvc *recipe.Service) http.Hand
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
-			w.Header().Set("Content-Type", "application/problem+json")
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(ProblemJson{
-				Type:   "about:blank",
-				Title:  "Bad Request",
-				Status: http.StatusBadRequest,
-				Detail: "Invalid recipe id",
-			})
+			writeProblem(w, http.StatusBadRequest, "Invalid recipe id")
 			return
 		}
 
 		rcp, err := recipeSvc.GetRecipe(r.Context(), id)
 		if err != nil {
 			if errors.Is(err, recipe.ErrRecipeNotFound) {
-				w.Header().Set("Content-Type", "application/problem+json")
-				w.WriteHeader(http.StatusNotFound)
-				json.NewEncoder(w).Encode(ProblemJson{
-					Type:   "about:blank",
-					Title:  "Not Found",
-					Status: http.StatusNotFound,
-					Detail: "Recipe not found",
-				})
+				writeProblem(w, http.StatusNotFound, "Recipe not found")
 				return
 			}
 			logger.Error("failed to get recipe", "err", err)
-			w.Header().Set("Content-Type", "application/problem+json")
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(ProblemJson{
-				Type:   "about:blank",
-				Title:  "Internal Server Error",
-				Status: http.StatusInternalServerError,
-			})
+			writeProblem(w, http.StatusInternalServerError, "")
 			return
 		}
 
@@ -174,13 +121,7 @@ func ListRecipesHandler(logger *slog.Logger, recipeSvc *recipe.Service) http.Han
 		rcps, err := recipeSvc.FindAllRecipes(r.Context())
 		if err != nil {
 			logger.Error("failed to list recipes", "err", err)
-			w.Header().Set("Content-Type", "application/problem+json")
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(ProblemJson{
-				Type:   "about:blank",
-				Title:  "Internal Server Error",
-				Status: http.StatusInternalServerError,
-			})
+			writeProblem(w, http.StatusInternalServerError, "")
 			return
 		}
 

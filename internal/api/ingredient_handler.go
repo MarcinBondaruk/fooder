@@ -24,27 +24,14 @@ func CreateIngredientHandler(logger *slog.Logger, ingredientSvc *ingredient.Serv
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req IngredientCreate
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			w.Header().Set("Content-Type", "application/problem+json")
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(ProblemJson{
-				Type:   "about:blank",
-				Title:  "Bad Request",
-				Status: http.StatusBadRequest,
-				Detail: "Invalid request body",
-			})
+			writeProblem(w, http.StatusBadRequest, "Invalid request body")
 			return
 		}
 
 		id, err := ingredientSvc.CreateIngredient(r.Context(), req.Name)
 		if err != nil {
 			logger.Error("failed to create ingredient", "err", err)
-			w.Header().Set("Content-Type", "application/problem+json")
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(ProblemJson{
-				Type:   "about:blank",
-				Title:  "Internal Server Error",
-				Status: http.StatusInternalServerError,
-			})
+			writeProblem(w, http.StatusInternalServerError, "")
 			return
 		}
 
@@ -62,38 +49,18 @@ func ViewIngredientHandler(logger *slog.Logger, ingredientSvc *ingredient.Servic
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
-			w.Header().Set("Content-Type", "application/problem+json")
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(ProblemJson{
-				Type:   "about:blank",
-				Title:  "Bad Request",
-				Status: http.StatusBadRequest,
-				Detail: "Invalid ingredient id",
-			})
+			writeProblem(w, http.StatusBadRequest, "Invalid ingredient id")
 			return
 		}
 
 		ing, err := ingredientSvc.GetIngredient(r.Context(), id)
 		if err != nil {
 			if errors.Is(err, ingredient.ErrIngredientNotFound) {
-				w.Header().Set("Content-Type", "application/problem+json")
-				w.WriteHeader(http.StatusNotFound)
-				json.NewEncoder(w).Encode(ProblemJson{
-					Type:   "about:blank",
-					Title:  "Not Found",
-					Status: http.StatusNotFound,
-					Detail: "Ingredient not found",
-				})
+				writeProblem(w, http.StatusNotFound, "Ingredient not found")
 				return
 			}
 			logger.Error("failed to get ingredient", "err", err)
-			w.Header().Set("Content-Type", "application/problem+json")
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(ProblemJson{
-				Type:   "about:blank",
-				Title:  "Internal Server Error",
-				Status: http.StatusInternalServerError,
-			})
+			writeProblem(w, http.StatusInternalServerError, "")
 			return
 		}
 
@@ -110,13 +77,7 @@ func ListIngredientsHandler(logger *slog.Logger, ingredientSvc *ingredient.Servi
 		ingredients, err := ingredientSvc.FindAllIngredients(r.Context())
 		if err != nil {
 			logger.Error("failed to list ingredients", "err", err)
-			w.Header().Set("Content-Type", "application/problem+json")
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(ProblemJson{
-				Type:   "about:blank",
-				Title:  "Internal Server Error",
-				Status: http.StatusInternalServerError,
-			})
+			writeProblem(w, http.StatusInternalServerError, "")
 			return
 		}
 
