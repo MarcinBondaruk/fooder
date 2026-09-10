@@ -1,23 +1,13 @@
 package cooking_list
 
-import (
-	"context"
-
-	"github.com/MarcinBondaruk/fooder/internal/recipe"
-)
-
-type RecipeService interface {
-	GetRecipesByIds(ctx context.Context, ids []int) ([]recipe.Recipe, error)
-}
+import "context"
 
 type Service struct {
-	recipeSvc  RecipeService
 	repository CookingListRepository
 }
 
-func NewService(recipeSvc RecipeService, repository CookingListRepository) *Service {
+func NewService(repository CookingListRepository) *Service {
 	return &Service{
-		recipeSvc,
 		repository,
 	}
 }
@@ -56,25 +46,4 @@ func (s *Service) ViewCookingList(ctx context.Context, id int) (CookingList, err
 	}
 
 	return cookingList, nil
-}
-
-func (s *Service) GenerateShoppingList(ctx context.Context, cookingListID int) (map[string]int, error) {
-	cookingList, err := s.repository.GetCookingList(ctx, cookingListID)
-	if err != nil {
-		return nil, err
-	}
-
-	recipes, err := s.recipeSvc.GetRecipesByIds(ctx, cookingList.Recipes)
-	if err != nil {
-		return nil, err
-	}
-
-	reducedIngredients := make(map[string]int)
-	for _, r := range recipes {
-		for _, ingredient := range r.Ingredients {
-			reducedIngredients[ingredient]++
-		}
-	}
-
-	return reducedIngredients, nil
 }

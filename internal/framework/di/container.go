@@ -12,16 +12,20 @@ import (
 	"github.com/MarcinBondaruk/fooder/internal/framework/database"
 	"github.com/MarcinBondaruk/fooder/internal/framework/env"
 	"github.com/MarcinBondaruk/fooder/internal/in_memory_db"
+	"github.com/MarcinBondaruk/fooder/internal/ingredient"
 	"github.com/MarcinBondaruk/fooder/internal/recipe"
+	"github.com/MarcinBondaruk/fooder/internal/shopping_list"
 	"github.com/MarcinBondaruk/fooder/internal/sqlite"
 	"github.com/MarcinBondaruk/fooder/internal/user"
 )
 
 type Services struct {
-	authService    *auth.Service
-	cookingService *cooking_list.Service
-	recipeService  *recipe.Service
-	userService    *user.Service
+	authService        *auth.Service
+	cookingService     *cooking_list.Service
+	ingredientService  *ingredient.Service
+	recipeService      *recipe.Service
+	shoppingListService *shopping_list.Service
+	userService        *user.Service
 }
 
 type Utils struct {
@@ -64,6 +68,12 @@ func NewContainer(envs *env.Env) (*Container, error) {
 
 	userService := user.NewService(userRepository)
 
+	ingredientRepository, err := sqlite.NewIngredientRepository(db)
+	if err != nil {
+		return nil, err
+	}
+	ingredientSvc := ingredient.NewService(ingredientRepository)
+
 	recipeRepository, err := sqlite.NewRecipeRepository(db)
 	if err != nil {
 		return nil, err
@@ -74,16 +84,20 @@ func NewContainer(envs *env.Env) (*Container, error) {
 	if err != nil {
 		return nil, err
 	}
-	clSvc := cooking_list.NewService(recipeSvc, cookingListRepository)
+	clSvc := cooking_list.NewService(cookingListRepository)
+
+	slSvc := shopping_list.NewService(clSvc, recipeSvc)
 
 	return &Container{
 		stopCh: stopCh,
 		db:     db,
 		services: &Services{
-			authService:    authSvc,
-			cookingService: clSvc,
-			recipeService:  recipeSvc,
-			userService:    userService,
+			authService:        authSvc,
+			cookingService:     clSvc,
+			ingredientService:  ingredientSvc,
+			recipeService:      recipeSvc,
+			shoppingListService: slSvc,
+			userService:        userService,
 		},
 		utils: &Utils{
 			logger:       logger,
@@ -108,6 +122,14 @@ func (c *Container) RecipeService() *recipe.Service {
 
 func (c *Container) CookingListService() *cooking_list.Service {
 	return c.services.cookingService
+}
+
+func (c *Container) IngredientService() *ingredient.Service {
+	return c.services.ingredientService
+}
+
+func (c *Container) ShoppingListService() *shopping_list.Service {
+	return c.services.shoppingListService
 }
 
 func (c *Container) UserService() *user.Service {

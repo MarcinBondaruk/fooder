@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/MarcinBondaruk/fooder/internal/cooking_list"
+	"github.com/MarcinBondaruk/fooder/internal/shopping_list"
 )
 
 type CreateCookingListRequest struct {
@@ -28,8 +29,15 @@ type CookingListResponse struct {
 	Recipes []CookingListItem `json:"recipes"`
 }
 
+type ShoppingListItemResponse struct {
+	IngredientID int     `json:"ingredientId"`
+	Name         string  `json:"name"`
+	TotalAmount  float64 `json:"totalAmount"`
+	Unit         string  `json:"unit"`
+}
+
 type ShoppingListResponse struct {
-	ShoppingList map[string]int `json:"shoppingList"`
+	Items []ShoppingListItemResponse `json:"items"`
 }
 
 func CreateCookingListHandler(logger *slog.Logger, clSvc *cooking_list.Service) http.HandlerFunc {
@@ -165,7 +173,7 @@ func AddRecipeToCookingListHandler(logger *slog.Logger, clSvc *cooking_list.Serv
 	}
 }
 
-func GenerateShoppingListHandler(logger *slog.Logger, clSvc *cooking_list.Service) http.HandlerFunc {
+func GenerateShoppingListHandler(logger *slog.Logger, slSvc *shopping_list.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
@@ -180,7 +188,7 @@ func GenerateShoppingListHandler(logger *slog.Logger, clSvc *cooking_list.Servic
 			return
 		}
 
-		shoppingList, err := clSvc.GenerateShoppingList(r.Context(), id)
+		items, err := slSvc.GenerateShoppingList(r.Context(), id)
 		if err != nil {
 			logger.Error("failed to generate shopping list", "err", err)
 			w.Header().Set("Content-Type", "application/problem+json")
@@ -193,9 +201,17 @@ func GenerateShoppingListHandler(logger *slog.Logger, clSvc *cooking_list.Servic
 			return
 		}
 
+		response := make([]ShoppingListItemResponse, len(items))
+		for i, item := range items {
+			response[i] = ShoppingListItemResponse{
+				IngredientID: item.IngredientID,
+				Name:         item.IngredientName,
+				TotalAmount:  item.TotalAmount,
+				Unit:         item.Unit.String(),
+			}
+		}
+
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(ShoppingListResponse{
-			ShoppingList: shoppingList,
-		})
+		json.NewEncoder(w).Encode(ShoppingListResponse{Items: response})
 	}
 }

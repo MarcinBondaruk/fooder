@@ -9,9 +9,81 @@ info:
 servers:
   - url: 'https://fooder.bendit.dev/api/v1'
 tags:
+  - name: 'ingredient'
   - name: 'recipe'
   - name: 'cooking-list'
 paths:
+  /ingredients:
+    get:
+      description: 'Returns a collection of ingredients'
+      operationId: 'getIngredients'
+      tags: ['ingredient']
+      responses:
+        '200':
+          description: 'A collection of ingredients'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ingredient'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      description: 'Creates a new ingredient'
+      operationId: 'createIngredient'
+      tags: ['ingredient']
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IngredientCreate'
+      responses:
+        '201':
+          description: 'Ingredient created'
+          headers:
+            Location:
+              description: location of newly created resource
+              schema:
+                type: string
+                example: '/ingredients/1'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ingredient'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/NotAuthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /ingredients/{id}:
+    get:
+      description: 'Returns an ingredient resource'
+      operationId: 'getIngredientByID'
+      tags: ['ingredient']
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 'An ingredient resource'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ingredient'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /recipes:
     get:
       description: 'Returns a collection of recipes'
@@ -32,6 +104,12 @@ paths:
       description: 'Creates new recipe'
       operationId: 'createRecipe'
       tags: ['recipe']
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecipeCreate'
       responses:
         '201':
           description: 'Recipe created'
@@ -51,6 +129,30 @@ paths:
           $ref: '#/components/responses/NotAuthenticated'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /recipes/{id}:
+    get:
+      description: 'Returns a recipe resource'
+      operationId: 'getRecipeByID'
+      tags: ['recipe']
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 'A recipe resource'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recipe'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /cooking-lists:
@@ -160,22 +262,6 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /recipes/{id}:
-    get:
-      description: 'Returns a recipe resource'
-      operationId: 'getRecipeByID'
-      tags: ['recipe']
-      responses:
-        '200':
-          description: 'A recipe resource'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Recipe'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
 components:
   responses:
     BadRequest:
@@ -214,6 +300,9 @@ components:
             $ref: '#/components/schemas/ProblemJsonDetails'
 
   schemas:
+    Unit:
+      type: string
+      enum: [g, kg, ml, l, piece, tbsp, tsp]
     Ingredient:
       type: object
       properties:
@@ -221,13 +310,47 @@ components:
           type: integer
         name:
           type: string
+      required:
+        - id
+        - name
+    IngredientCreate:
+      type: object
+      properties:
+        name:
+          type: string
+      required:
+        - name
     RecipeIngredient:
       type: object
       properties:
         ingredientId:
-          type: string
+          type: integer
         name:
           type: string
+        amount:
+          type: number
+          format: double
+        unit:
+          $ref: '#/components/schemas/Unit'
+      required:
+        - ingredientId
+        - name
+        - amount
+        - unit
+    RecipeIngredientCreate:
+      type: object
+      properties:
+        ingredientId:
+          type: integer
+        amount:
+          type: number
+          format: double
+        unit:
+          $ref: '#/components/schemas/Unit'
+      required:
+        - ingredientId
+        - amount
+        - unit
     Recipe:
       type: object
       properties:
@@ -235,12 +358,17 @@ components:
           type: integer
         title:
           type: string
+        description:
+          type: string
         ingredients:
           type: array
           items:
-            $ref: '#/components/schemas/Ingredient'
-        description:
-          type: string
+            $ref: '#/components/schemas/RecipeIngredient'
+      required:
+        - id
+        - title
+        - description
+        - ingredients
     RecipeCreate:
       type: object
       properties:
@@ -251,7 +379,7 @@ components:
         ingredients:
           type: array
           items:
-            $ref: '#/components/schemas/Ingredient'
+            $ref: '#/components/schemas/RecipeIngredientCreate'
       required:
         - title
         - description
@@ -284,13 +412,32 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CookingListItem'
+    ShoppingListItem:
+      type: object
+      properties:
+        ingredientId:
+          type: integer
+        name:
+          type: string
+        totalAmount:
+          type: number
+          format: double
+        unit:
+          $ref: '#/components/schemas/Unit'
+      required:
+        - ingredientId
+        - name
+        - totalAmount
+        - unit
     ShoppingListResponse:
       type: object
       properties:
-        shoppingList:
-          type: object
-          additionalProperties:
-            type: integer
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShoppingListItem'
+      required:
+        - items
     ProblemJsonDetails:
       type: object
       required:
@@ -310,4 +457,3 @@ components:
         instance:
           type: string
           format: uri
-

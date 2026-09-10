@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/MarcinBondaruk/fooder/internal/ingredient"
 	"github.com/MarcinBondaruk/fooder/internal/recipe"
 )
 
@@ -37,8 +38,36 @@ func (f *fakeRecipeRepo) FindAllRecipes(ctx context.Context) ([]recipe.Recipe, e
 	return f.findAllRecipesFn(ctx)
 }
 
+type fakeIngredientRepo struct {
+	getIngredientFn func(ctx context.Context, id int) (ingredient.Ingredient, error)
+}
+
+func (f *fakeIngredientRepo) CreateIngredient(_ context.Context, _ ingredient.Ingredient) (int, error) {
+	return 0, nil
+}
+
+func (f *fakeIngredientRepo) GetIngredient(ctx context.Context, id int) (ingredient.Ingredient, error) {
+	return f.getIngredientFn(ctx, id)
+}
+
+func (f *fakeIngredientRepo) FindAllIngredients(_ context.Context) ([]ingredient.Ingredient, error) {
+	return nil, nil
+}
+
+func (f *fakeIngredientRepo) FindOrCreate(_ context.Context, _ string) (ingredient.Ingredient, error) {
+	return ingredient.Ingredient{}, nil
+}
+
 func newDiscardLogger() *slog.Logger {
 	return slog.New(slog.NewTextHandler(io.Discard, nil))
+}
+
+func newFakeIngredientService() *ingredient.Service {
+	return ingredient.NewService(&fakeIngredientRepo{
+		getIngredientFn: func(_ context.Context, id int) (ingredient.Ingredient, error) {
+			return ingredient.Ingredient{ID: id, Name: "test-ingredient"}, nil
+		},
+	})
 }
 
 func TestCreateRecipeHandler(t *testing.T) {
@@ -52,7 +81,7 @@ func TestCreateRecipeHandler(t *testing.T) {
 	}{
 		{
 			name: "valid recipe",
-			body: `{"title":"Pasta","description":"Boil water","ingredients":[{"id":0,"name":"noodles"}]}`,
+			body: `{"title":"Pasta","description":"Boil water","ingredients":[{"ingredientId":1,"amount":200,"unit":"g"}]}`,
 			createFn: func(_ context.Context, _ recipe.Recipe) (int, error) {
 				return 42, nil
 			},
@@ -93,13 +122,21 @@ func TestCreateRecipeHandler(t *testing.T) {
 			wantContentType: "application/json",
 			wantLocation:    "/api/v1/recipes/1",
 		},
+		{
+			name:            "invalid unit",
+			body:            `{"title":"Pasta","description":"Boil","ingredients":[{"ingredientId":1,"amount":200,"unit":"invalid"}]}`,
+			createFn:        nil,
+			wantStatus:      http.StatusBadRequest,
+			wantContentType: "application/problem+json",
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := &fakeRecipeRepo{createRecipeFn: tt.createFn}
 			svc := recipe.NewService(repo)
-			handler := CreateRecipeHandler(newDiscardLogger(), svc)
+			ingSvc := newFakeIngredientService()
+			handler := CreateRecipeHandler(newDiscardLogger(), svc, ingSvc)
 
 			req := httptest.NewRequest(http.MethodPost, "/api/v1/recipes", strings.NewReader(tt.body))
 			req.Header.Set("Content-Type", "application/json")
@@ -161,7 +198,10 @@ func TestViewRecipeHandler(t *testing.T) {
 					ID:          1,
 					Title:       "Soup",
 					Description: "Warm",
-					Ingredients: []string{"water", "salt"},
+					Ingredients: []recipe.RecipeIngredient{
+						{IngredientID: 1, Name: "water", Amount: 500, Unit: ingredient.UnitMilliliter},
+						{IngredientID: 2, Name: "salt", Amount: 5, Unit: ingredient.UnitGram},
+					},
 				}, nil
 			},
 			wantStatus: http.StatusOK,
@@ -215,8 +255,8 @@ func TestViewRecipeHandler(t *testing.T) {
 				if len(resp.Ingredients) != 2 {
 					t.Errorf("len(Ingredients) = %d, want 2", len(resp.Ingredients))
 				}
-				if len(resp.Ingredients) > 0 && resp.Ingredients[0].ID != 1 {
-					t.Errorf("Ingredients[0].ID = %d, want 1 (1-indexed)", resp.Ingredients[0].ID)
+				if len(resp.Ingredients) > 0 && resp.Ingredients[0].IngredientID != 1 {
+					t.Errorf("Ingredients[0].IngredientID = %d, want 1", resp.Ingredients[0].IngredientID)
 				}
 			}
 
@@ -235,15 +275,20 @@ func TestViewRecipeHandler(t *testing.T) {
 
 func TestListRecipesHandler(t *testing.T) {
 	tests := []struct {
-		name     string
-		recipes  []recipe.Recipe
-		wantLen  int
+		name    string
+		recipes []recipe.Recipe
+		wantLen int
 	}{
 		{
 			name: "multiple recipes",
 			recipes: []recipe.Recipe{
-				{ID: 1, Title: "Soup", Description: "Warm", Ingredients: []string{"water"}},
-				{ID: 2, Title: "Salad", Description: "Fresh", Ingredients: []string{"lettuce", "tomato"}},
+				{ID: 1, Title: "Soup", Description: "Warm", Ingredients: []recipe.RecipeIngredient{
+					{IngredientID: 1, Name: "water", Amount: 500, Unit: ingredient.UnitMilliliter},
+				}},
+				{ID: 2, Title: "Salad", Description: "Fresh", Ingredients: []recipe.RecipeIngredient{
+					{IngredientID: 2, Name: "lettuce", Amount: 1, Unit: ingredient.UnitPiece},
+					{IngredientID: 3, Name: "tomato", Amount: 2, Unit: ingredient.UnitPiece},
+				}},
 			},
 			wantLen: 2,
 		},
@@ -287,8 +332,8 @@ func TestListRecipesHandler(t *testing.T) {
 				if len(second.Ingredients) != 2 {
 					t.Errorf("second recipe ingredients len = %d, want 2", len(second.Ingredients))
 				}
-				if len(second.Ingredients) >= 2 && second.Ingredients[1].ID != 2 {
-					t.Errorf("second recipe Ingredients[1].ID = %d, want 2", second.Ingredients[1].ID)
+				if len(second.Ingredients) >= 2 && second.Ingredients[1].IngredientID != 3 {
+					t.Errorf("second recipe Ingredients[1].IngredientID = %d, want 3", second.Ingredients[1].IngredientID)
 				}
 			}
 		})

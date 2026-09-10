@@ -14,7 +14,13 @@ func NewRouter(envs *env.Env, c *di.Container) http.Handler {
 	m := http.NewServeMux()
 
 	// API
-	m.Handle("POST /api/v1/recipes", middleware.Chain(api.CreateRecipeHandler(c.Logger(), c.RecipeService()), middleware.NewApiKeyAuthorization(envs.ApiKey())))
+	m.Handle("POST /api/v1/ingredients", middleware.Chain(api.CreateIngredientHandler(c.Logger(), c.IngredientService()), middleware.NewApiKeyAuthorization(envs.ApiKey())))
+
+	m.Handle("GET /api/v1/ingredients/{id}", middleware.Chain(api.ViewIngredientHandler(c.Logger(), c.IngredientService())))
+
+	m.Handle("GET /api/v1/ingredients", middleware.Chain(api.ListIngredientsHandler(c.Logger(), c.IngredientService())))
+
+	m.Handle("POST /api/v1/recipes", middleware.Chain(api.CreateRecipeHandler(c.Logger(), c.RecipeService(), c.IngredientService()), middleware.NewApiKeyAuthorization(envs.ApiKey())))
 
 	m.Handle("GET /api/v1/recipes/{id}", middleware.Chain(api.ViewRecipeHandler(c.Logger(), c.RecipeService())))
 
@@ -26,7 +32,7 @@ func NewRouter(envs *env.Env, c *di.Container) http.Handler {
 
 	m.Handle("GET /api/v1/cooking-lists/{id}", middleware.Chain(api.ViewCookingListHandler(c.Logger(), c.CookingListService())))
 
-	m.Handle("GET /api/v1/cooking-lists/{id}/shopping-list", middleware.Chain(api.GenerateShoppingListHandler(c.Logger(), c.CookingListService())))
+	m.Handle("GET /api/v1/cooking-lists/{id}/shopping-list", middleware.Chain(api.GenerateShoppingListHandler(c.Logger(), c.ShoppingListService())))
 
 	m.Handle("GET /openapi.yaml", middleware.Chain(api.RawApiHandler()))
 

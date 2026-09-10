@@ -8,28 +8,37 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/MarcinBondaruk/fooder/internal/ingredient"
 	"github.com/MarcinBondaruk/fooder/internal/recipe"
 )
 
-type Ingredient struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
+type RecipeIngredientRequest struct {
+	IngredientID int     `json:"ingredientId"`
+	Amount       float64 `json:"amount"`
+	Unit         string  `json:"unit"`
+}
+
+type RecipeIngredientResponse struct {
+	IngredientID int     `json:"ingredientId"`
+	Name         string  `json:"name"`
+	Amount       float64 `json:"amount"`
+	Unit         string  `json:"unit"`
 }
 
 type RecipeCreate struct {
-	Title       string       `json:"title"`
-	Description string       `json:"description"`
-	Ingredients []Ingredient `json:"ingredients"`
+	Title       string                    `json:"title"`
+	Description string                    `json:"description"`
+	Ingredients []RecipeIngredientRequest `json:"ingredients"`
 }
 
 type RecipeResponse struct {
-	ID          int          `json:"id"`
-	Title       string       `json:"title"`
-	Description string       `json:"description"`
-	Ingredients []Ingredient `json:"ingredients"`
+	ID          int                        `json:"id"`
+	Title       string                     `json:"title"`
+	Description string                     `json:"description"`
+	Ingredients []RecipeIngredientResponse `json:"ingredients"`
 }
 
-func CreateRecipeHandler(logger *slog.Logger, recipeSvc *recipe.Service) http.HandlerFunc {
+func CreateRecipeHandler(logger *slog.Logger, recipeSvc *recipe.Service, ingredientSvc *ingredient.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req RecipeCreate
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -44,12 +53,54 @@ func CreateRecipeHandler(logger *slog.Logger, recipeSvc *recipe.Service) http.Ha
 			return
 		}
 
-		ingredients := make([]string, len(req.Ingredients))
-		for i, ing := range req.Ingredients {
-			ingredients[i] = ing.Name
+		recipeIngredients := make([]recipe.RecipeIngredient, len(req.Ingredients))
+		for i, ri := range req.Ingredients {
+			unit := ingredient.Unit(ri.Unit)
+			if !unit.Valid() {
+				w.Header().Set("Content-Type", "application/problem+json")
+				w.WriteHeader(http.StatusBadRequest)
+				json.NewEncoder(w).Encode(ProblemJson{
+					Type:   "about:blank",
+					Title:  "Bad Request",
+					Status: http.StatusBadRequest,
+					Detail: fmt.Sprintf("Invalid unit: %s", ri.Unit),
+				})
+				return
+			}
+
+			ing, err := ingredientSvc.GetIngredient(r.Context(), ri.IngredientID)
+			if err != nil {
+				if errors.Is(err, ingredient.ErrIngredientNotFound) {
+					w.Header().Set("Content-Type", "application/problem+json")
+					w.WriteHeader(http.StatusBadRequest)
+					json.NewEncoder(w).Encode(ProblemJson{
+						Type:   "about:blank",
+						Title:  "Bad Request",
+						Status: http.StatusBadRequest,
+						Detail: fmt.Sprintf("Ingredient with id %d not found", ri.IngredientID),
+					})
+					return
+				}
+				logger.Error("failed to get ingredient", "err", err)
+				w.Header().Set("Content-Type", "application/problem+json")
+				w.WriteHeader(http.StatusInternalServerError)
+				json.NewEncoder(w).Encode(ProblemJson{
+					Type:   "about:blank",
+					Title:  "Internal Server Error",
+					Status: http.StatusInternalServerError,
+				})
+				return
+			}
+
+			recipeIngredients[i] = recipe.RecipeIngredient{
+				IngredientID: ing.ID,
+				Name:         ing.Name,
+				Amount:       ri.Amount,
+				Unit:         unit,
+			}
 		}
 
-		id, err := recipeSvc.CreateRecipe(r.Context(), recipe.NewRecipe(req.Title, req.Description, ingredients))
+		id, err := recipeSvc.CreateRecipe(r.Context(), recipe.NewRecipe(req.Title, req.Description, recipeIngredients))
 		if err != nil {
 			logger.Error("failed to create recipe", "err", err)
 			w.Header().Set("Content-Type", "application/problem+json")
@@ -69,7 +120,7 @@ func CreateRecipeHandler(logger *slog.Logger, recipeSvc *recipe.Service) http.Ha
 			ID:          id,
 			Title:       req.Title,
 			Description: req.Description,
-			Ingredients: req.Ingredients,
+			Ingredients: toRecipeIngredientResponses(recipeIngredients),
 		})
 	}
 }
@@ -144,15 +195,23 @@ func ListRecipesHandler(logger *slog.Logger, recipeSvc *recipe.Service) http.Han
 }
 
 func toRecipeResponse(rcp recipe.Recipe) RecipeResponse {
-	ingredients := make([]Ingredient, len(rcp.Ingredients))
-	for i, name := range rcp.Ingredients {
-		ingredients[i] = Ingredient{ID: i + 1, Name: name}
-	}
-
 	return RecipeResponse{
 		ID:          rcp.ID,
 		Title:       rcp.Title,
 		Description: rcp.Description,
-		Ingredients: ingredients,
+		Ingredients: toRecipeIngredientResponses(rcp.Ingredients),
 	}
+}
+
+func toRecipeIngredientResponses(ingredients []recipe.RecipeIngredient) []RecipeIngredientResponse {
+	responses := make([]RecipeIngredientResponse, len(ingredients))
+	for i, ri := range ingredients {
+		responses[i] = RecipeIngredientResponse{
+			IngredientID: ri.IngredientID,
+			Name:         ri.Name,
+			Amount:       ri.Amount,
+			Unit:         ri.Unit.String(),
+		}
+	}
+	return responses
 }

@@ -33,7 +33,7 @@
             <p>Description: {{ .Description }}</p>
             <ul>
                 {{- range .Ingredients }}
-                <li> {{ . }} </li>
+                <li>{{ .Amount }} {{ .Unit }} {{ .Name }}</li>
                 {{- end }}
             </ul>
         </div>

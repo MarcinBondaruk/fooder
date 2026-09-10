@@ -3,11 +3,11 @@ package sqlite
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 
+	"github.com/MarcinBondaruk/fooder/internal/ingredient"
 	"github.com/MarcinBondaruk/fooder/internal/recipe"
 )
 
@@ -16,30 +16,42 @@ type RecipeRepository struct {
 }
 
 func NewRecipeRepository(db *sql.DB) (*RecipeRepository, error) {
-	query := `
-	CREATE TABLE IF NOT EXISTS recipes (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		name TEXT NOT NULL,
-		description TEXT NOT NULL,
-		ingredients TEXT NOT NULL
-	)`
-	if _, err := db.Exec(query); err != nil {
-		return nil, fmt.Errorf("failed to create recipes table: %w", err)
+	queries := []string{
+		`CREATE TABLE IF NOT EXISTS recipes (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL,
+			description TEXT NOT NULL
+		)`,
+		`CREATE TABLE IF NOT EXISTS recipe_ingredients (
+			recipe_id INTEGER NOT NULL,
+			ingredient_id INTEGER NOT NULL,
+			amount REAL NOT NULL,
+			unit TEXT NOT NULL,
+			PRIMARY KEY (recipe_id, ingredient_id),
+			FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE,
+			FOREIGN KEY (ingredient_id) REFERENCES ingredients(id)
+		)`,
 	}
 
-	return &RecipeRepository{
-		db: db,
-	}, nil
+	for _, q := range queries {
+		if _, err := db.Exec(q); err != nil {
+			return nil, fmt.Errorf("failed to create table: %w", err)
+		}
+	}
+
+	return &RecipeRepository{db: db}, nil
 }
 
 func (r *RecipeRepository) CreateRecipe(ctx context.Context, rcp recipe.Recipe) (int, error) {
-	serializedIngredients := strings.Join(rcp.Ingredients, ",")
-	result, err := r.db.ExecContext(
-		ctx,
-		"INSERT INTO main.recipes (name, description, ingredients) VALUES (:name, :description, :ingredients)",
-		rcp.Title,
-		rcp.Description,
-		serializedIngredients,
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return 0, fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	result, err := tx.ExecContext(ctx,
+		"INSERT INTO recipes (name, description) VALUES (?, ?)",
+		rcp.Title, rcp.Description,
 	)
 	if err != nil {
 		return 0, fmt.Errorf("failed to insert recipe: %w", err)
@@ -50,29 +62,66 @@ func (r *RecipeRepository) CreateRecipe(ctx context.Context, rcp recipe.Recipe) 
 		return 0, fmt.Errorf("failed to retrieve recipe id: %w", err)
 	}
 
+	for _, ri := range rcp.Ingredients {
+		_, err := tx.ExecContext(ctx,
+			"INSERT INTO recipe_ingredients (recipe_id, ingredient_id, amount, unit) VALUES (?, ?, ?, ?)",
+			id, ri.IngredientID, ri.Amount, ri.Unit.String(),
+		)
+		if err != nil {
+			return 0, fmt.Errorf("failed to insert recipe ingredient: %w", err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return 0, fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
 	return int(id), nil
 }
 
 func (r *RecipeRepository) GetRecipe(ctx context.Context, id int) (recipe.Recipe, error) {
-	query := `SELECT id, name, description, ingredients FROM main.recipes WHERE id = :id`
-	row := r.db.QueryRowContext(ctx, query, id)
+	query := `
+		SELECT r.id, r.name, r.description, ri.ingredient_id, i.name, ri.amount, ri.unit
+		FROM recipes r
+		LEFT JOIN recipe_ingredients ri ON r.id = ri.recipe_id
+		LEFT JOIN ingredients i ON ri.ingredient_id = i.id
+		WHERE r.id = ?`
 
-	var recipeID int
-	var name, description, ingredients string
-	err := row.Scan(&recipeID, &name, &description, &ingredients)
+	rows, err := r.db.QueryContext(ctx, query, id)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return recipe.Recipe{}, recipe.ErrRecipeNotFound
+		return recipe.Recipe{}, fmt.Errorf("failed to query recipe: %w", err)
+	}
+	defer rows.Close()
+
+	var rcp recipe.Recipe
+	found := false
+
+	for rows.Next() {
+		var ingredientID *int
+		var ingredientName *string
+		var amount *float64
+		var unit *string
+
+		if err := rows.Scan(&rcp.ID, &rcp.Title, &rcp.Description, &ingredientID, &ingredientName, &amount, &unit); err != nil {
+			return recipe.Recipe{}, fmt.Errorf("failed to scan recipe: %w", err)
 		}
-		return recipe.Recipe{}, fmt.Errorf("failed to get recipe: %w", err)
+		found = true
+
+		if ingredientID != nil {
+			rcp.Ingredients = append(rcp.Ingredients, recipe.RecipeIngredient{
+				IngredientID: *ingredientID,
+				Name:         *ingredientName,
+				Amount:       *amount,
+				Unit:         ingredient.Unit(*unit),
+			})
+		}
 	}
 
-	return recipe.Recipe{
-		ID:          recipeID,
-		Title:       name,
-		Description: description,
-		Ingredients: strings.Split(ingredients, ","),
-	}, nil
+	if !found {
+		return recipe.Recipe{}, recipe.ErrRecipeNotFound
+	}
+
+	return rcp, nil
 }
 
 func (r *RecipeRepository) GetRecipesByIds(ctx context.Context, ids []int) ([]recipe.Recipe, error) {
@@ -80,58 +129,87 @@ func (r *RecipeRepository) GetRecipesByIds(ctx context.Context, ids []int) ([]re
 		return []recipe.Recipe{}, nil
 	}
 
-	rows, err := r.db.QueryContext(
-		ctx,
-		"SELECT id, name, description, ingredients FROM main.recipes WHERE id IN (:recipeIds)",
-		serializeRecipeIds(ids),
-	)
+	placeholders := make([]string, len(ids))
+	args := make([]any, len(ids))
+	for i, id := range ids {
+		placeholders[i] = "?"
+		args[i] = id
+	}
+
+	query := fmt.Sprintf(`
+		SELECT r.id, r.name, r.description, ri.ingredient_id, i.name, ri.amount, ri.unit
+		FROM recipes r
+		LEFT JOIN recipe_ingredients ri ON r.id = ri.recipe_id
+		LEFT JOIN ingredients i ON ri.ingredient_id = i.id
+		WHERE r.id IN (%s)
+		ORDER BY r.id`, strings.Join(placeholders, ","))
+
+	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query recipes: %w", err)
 	}
 	defer rows.Close()
 
-	var recipes []recipe.Recipe
-	for rows.Next() {
-		var recipeID int
-		var name, description, ingredients string
-		err := rows.Scan(&recipeID, &name, &description, &ingredients)
-		if err != nil {
-			return nil, fmt.Errorf("failed to scan recipe: %w", err)
-		}
-
-		recipes = append(recipes, recipe.Recipe{
-			ID:          recipeID,
-			Title:       name,
-			Description: description,
-			Ingredients: strings.Split(ingredients, ","),
-		})
-	}
-
-	return recipes, nil
+	return scanRecipes(rows)
 }
 
 func (r *RecipeRepository) FindAllRecipes(ctx context.Context) ([]recipe.Recipe, error) {
-	rows, err := r.db.QueryContext(ctx, "SELECT id, name, description, ingredients FROM main.recipes")
+	query := `
+		SELECT r.id, r.name, r.description, ri.ingredient_id, i.name, ri.amount, ri.unit
+		FROM recipes r
+		LEFT JOIN recipe_ingredients ri ON r.id = ri.recipe_id
+		LEFT JOIN ingredients i ON ri.ingredient_id = i.id
+		ORDER BY r.id`
+
+	rows, err := r.db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query recipes: %w", err)
 	}
 	defer rows.Close()
 
-	var recipes []recipe.Recipe
+	return scanRecipes(rows)
+}
+
+func scanRecipes(rows *sql.Rows) ([]recipe.Recipe, error) {
+	recipeMap := make(map[int]*recipe.Recipe)
+	var order []int
+
 	for rows.Next() {
 		var recipeID int
-		var name, description, ingredients string
-		err := rows.Scan(&recipeID, &name, &description, &ingredients)
-		if err != nil {
+		var name, description string
+		var ingredientID *int
+		var ingredientName *string
+		var amount *float64
+		var unit *string
+
+		if err := rows.Scan(&recipeID, &name, &description, &ingredientID, &ingredientName, &amount, &unit); err != nil {
 			return nil, fmt.Errorf("failed to scan recipe: %w", err)
 		}
 
-		recipes = append(recipes, recipe.Recipe{
-			ID:          recipeID,
-			Title:       name,
-			Description: description,
-			Ingredients: strings.Split(ingredients, ","),
-		})
+		rcp, exists := recipeMap[recipeID]
+		if !exists {
+			rcp = &recipe.Recipe{
+				ID:          recipeID,
+				Title:       name,
+				Description: description,
+			}
+			recipeMap[recipeID] = rcp
+			order = append(order, recipeID)
+		}
+
+		if ingredientID != nil {
+			rcp.Ingredients = append(rcp.Ingredients, recipe.RecipeIngredient{
+				IngredientID: *ingredientID,
+				Name:         *ingredientName,
+				Amount:       *amount,
+				Unit:         ingredient.Unit(*unit),
+			})
+		}
+	}
+
+	recipes := make([]recipe.Recipe, 0, len(order))
+	for _, id := range order {
+		recipes = append(recipes, *recipeMap[id])
 	}
 
 	return recipes, nil
