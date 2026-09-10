@@ -14,22 +14,8 @@ type UserRepository struct {
 	db *sql.DB
 }
 
-func NewUserRepository(db *sql.DB) (*UserRepository, error) {
-	query := `
-	CREATE TABLE IF NOT EXISTS users (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		email TEXT UNIQUE NOT NULL,
-		name VARCHAR(63),
-		password VARCHAR(63) NOT NULL
-	)`
-
-	if _, err := db.Exec(query); err != nil {
-		return nil, fmt.Errorf("failed to create users table: %w", err)
-	}
-
-	return &UserRepository{
-		db: db,
-	}, nil
+func NewUserRepository(db *sql.DB) *UserRepository {
+	return &UserRepository{db: db}
 }
 
 func (r *UserRepository) AddUser(ctx context.Context, user user.User) (int, error) {

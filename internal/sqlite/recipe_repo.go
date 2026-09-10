@@ -15,31 +15,8 @@ type RecipeRepository struct {
 	db *sql.DB
 }
 
-func NewRecipeRepository(db *sql.DB) (*RecipeRepository, error) {
-	queries := []string{
-		`CREATE TABLE IF NOT EXISTS recipes (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			name TEXT NOT NULL,
-			description TEXT NOT NULL
-		)`,
-		`CREATE TABLE IF NOT EXISTS recipe_ingredients (
-			recipe_id INTEGER NOT NULL,
-			ingredient_id INTEGER NOT NULL,
-			amount REAL NOT NULL,
-			unit TEXT NOT NULL,
-			PRIMARY KEY (recipe_id, ingredient_id),
-			FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE,
-			FOREIGN KEY (ingredient_id) REFERENCES ingredients(id)
-		)`,
-	}
-
-	for _, q := range queries {
-		if _, err := db.Exec(q); err != nil {
-			return nil, fmt.Errorf("failed to create table: %w", err)
-		}
-	}
-
-	return &RecipeRepository{db: db}, nil
+func NewRecipeRepository(db *sql.DB) *RecipeRepository {
+	return &RecipeRepository{db: db}
 }
 
 func (r *RecipeRepository) CreateRecipe(ctx context.Context, rcp recipe.Recipe) (int, error) {

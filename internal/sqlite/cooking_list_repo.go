@@ -15,22 +15,8 @@ type CookingListRepository struct {
 	db *sql.DB
 }
 
-func NewCookingListRepository(db *sql.DB) (*CookingListRepository, error) {
-	query := `
-		CREATE TABLE IF NOT EXISTS cooking_list (
-		    id INTEGER PRIMARY KEY AUTOINCREMENT,
-		    recipes TEXT NOT NULL
-		)
-	`
-
-	_, err := db.Exec(query)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create cooking_list table: %w", err)
-	}
-
-	return &CookingListRepository{
-		db: db,
-	}, nil
+func NewCookingListRepository(db *sql.DB) *CookingListRepository {
+	return &CookingListRepository{db: db}
 }
 
 func (r *CookingListRepository) CreateCookingList(ctx context.Context, cl cooking_list.CookingList) (int, error) {

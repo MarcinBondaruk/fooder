@@ -13,17 +13,8 @@ type IngredientRepository struct {
 	db *sql.DB
 }
 
-func NewIngredientRepository(db *sql.DB) (*IngredientRepository, error) {
-	query := `
-	CREATE TABLE IF NOT EXISTS ingredients (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		name TEXT NOT NULL UNIQUE
-	)`
-	if _, err := db.Exec(query); err != nil {
-		return nil, fmt.Errorf("failed to create ingredients table: %w", err)
-	}
-
-	return &IngredientRepository{db: db}, nil
+func NewIngredientRepository(db *sql.DB) *IngredientRepository {
+	return &IngredientRepository{db: db}
 }
 
 func (r *IngredientRepository) CreateIngredient(ctx context.Context, ing ingredient.Ingredient) (int, error) {

@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/MarcinBondaruk/fooder/db"
 	"github.com/MarcinBondaruk/fooder/internal/auth"
 	"github.com/MarcinBondaruk/fooder/internal/auth/login_limiter"
 	"github.com/MarcinBondaruk/fooder/internal/cooking_list"
@@ -47,8 +48,12 @@ func NewContainer(envs *env.Env) (*Container, error) {
 	logHandler := slog.NewJSONHandler(os.Stdout, logHandlerOpts)
 	logger := slog.New(logHandler)
 
-	db, err := database.NewSqlite(envs.SqliteDSN())
+	sqlDB, err := database.NewSqlite(envs.SqliteDSN())
 	if err != nil {
+		return nil, err
+	}
+
+	if err := db.RunMigrations(sqlDB); err != nil {
 		return nil, err
 	}
 
@@ -59,38 +64,26 @@ func NewContainer(envs *env.Env) (*Container, error) {
 	tokenStorage := make(map[string]struct{})
 
 	tokenRepository := in_memory_db.NewTokenRepository(tokenStorage)
-	userRepository, err := sqlite.NewUserRepository(db)
-	if err != nil {
-		return nil, err
-	}
+	userRepository := sqlite.NewUserRepository(sqlDB)
 
 	authSvc := auth.NewService(userRepository, tokenRepository, loginLimiter)
 
 	userService := user.NewService(userRepository)
 
-	ingredientRepository, err := sqlite.NewIngredientRepository(db)
-	if err != nil {
-		return nil, err
-	}
+	ingredientRepository := sqlite.NewIngredientRepository(sqlDB)
 	ingredientSvc := ingredient.NewService(ingredientRepository)
 
-	recipeRepository, err := sqlite.NewRecipeRepository(db)
-	if err != nil {
-		return nil, err
-	}
+	recipeRepository := sqlite.NewRecipeRepository(sqlDB)
 	recipeSvc := recipe.NewService(recipeRepository)
 
-	cookingListRepository, err := sqlite.NewCookingListRepository(db)
-	if err != nil {
-		return nil, err
-	}
+	cookingListRepository := sqlite.NewCookingListRepository(sqlDB)
 	clSvc := cooking_list.NewService(cookingListRepository)
 
 	slSvc := shopping_list.NewService(clSvc, recipeSvc)
 
 	return &Container{
 		stopCh: stopCh,
-		db:     db,
+		db:     sqlDB,
 		services: &Services{
 			authService:        authSvc,
 			cookingService:     clSvc,
